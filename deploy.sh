@@ -4,7 +4,7 @@ set -e
 PROJECT_LOCAL="/mnt/c/Users/Sistemas/Documents/FastAPI/FastAPI - Scheduling Visitas"
 REMOTE_USER="paucosta"
 REMOTE_HOST="192.168.2.197"
-REMOTE_DIR="/home/sistemas/scheduling-visitas"
+REMOTE_DIR="/opt/fastapi-scheduling-visitas"
 SERVICE="fastapi-scheduling-visitas"
 
 MSG=${1:-"Actualización"}

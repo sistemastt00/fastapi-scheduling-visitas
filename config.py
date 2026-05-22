@@ -89,7 +89,7 @@ DEFAULT_GESTOR_ID: str = ""
 
 # ─── Deploy webhook ───────────────────────────────────────────────────────────
 DEPLOY_TOKEN = os.getenv("DEPLOY_TOKEN", "")
-DEPLOY_DIR   = os.getenv("DEPLOY_DIR", "/home/sistemas/scheduling-visitas")
+DEPLOY_DIR   = os.getenv("DEPLOY_DIR", "/opt/fastapi-scheduling-visitas")
 
 # ─── Telegram — alertas de error ─────────────────────────────────────────────
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
