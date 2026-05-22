@@ -43,17 +43,45 @@ BX_FIELD_DEAL_URL        = "ufCrm31_1757428103201"     # URL del deal relacionad
 BX_CATEGORIA_FIJA = "31446"
 
 # ─── Mapas configurables: tipo de cita Acuity → valores Bitrix24 ─────────────
-# Añadir entradas con los nombres exactos de los tipos de cita de Acuity.
-# Clave: nombre del tipo de cita (campo `type` del appointment)
-# Valor: ID de usuario Bitrix24 del gestor responsable
+# Fuente: GET /api/v1/appointment-types (36312399)
+# Rellenar los valores (strings vacíos = campo no se envía a Bitrix24)
+
+# Clave: nombre exacto del tipo de cita | Valor: ID de usuario Bitrix24 del gestor
 CENTRO_GESTOR: dict[str, str] = {
-    # "Centro Madrid Norte": "1234",
-    # "Centro Barcelona": "5678",
+    "Centro S. S. de los Reyes":      "",
+    "Centro Alcobendas":              "",
+    "Centro Fuencarral":              "",
+    "Centro Chamartín":               "",
+    "Centro San Blas":                "",
+    "Centro Barajas":                 "",
+    "Centro Móstoles":                "",
+    "Centro Leganés S. J. Valderas":  "",
+    "Centro Leganés Butarque":        "",
+    "Centro Alcorcón":                "",
+    "Centro Sevilla":                 "",
+    "Centro Valladolid":              "",
+    "Centro Hortaleza":               "",
+    "Centro Villaverde":              "",
+    "Porte":                          "",
 }
 
-# Clave: nombre del tipo de cita | Valor: identificador del centro en Bitrix24
+# Clave: nombre exacto del tipo de cita | Valor: valor del campo centro en Bitrix24
 CENTRO_BITRIX: dict[str, str] = {
-    # "Centro Madrid Norte": "VALOR_CAMPO_CENTRO",
+    "Centro S. S. de los Reyes":      "",
+    "Centro Alcobendas":              "",
+    "Centro Fuencarral":              "",
+    "Centro Chamartín":               "",
+    "Centro San Blas":                "",
+    "Centro Barajas":                 "",
+    "Centro Móstoles":                "",
+    "Centro Leganés S. J. Valderas":  "",
+    "Centro Leganés Butarque":        "",
+    "Centro Alcorcón":                "",
+    "Centro Sevilla":                 "",
+    "Centro Valladolid":              "",
+    "Centro Hortaleza":               "",
+    "Centro Villaverde":              "",
+    "Porte":                          "",
 }
 
 # ID del gestor por defecto si el tipo de cita no está en el mapa
