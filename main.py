@@ -1,0 +1,323 @@
+"""
+main.py — Scheduling Visitas Bot
+FastAPI + Acuity Scheduling + Bitrix24 + Telegram
+
+Arquitectura:
+  · Webhook POST /acuity : recibe eventos de Acuity (scheduled / rescheduled / canceled)
+  · Deploy   POST /deploy: git pull + reinicio del servicio
+  · Monitor  GET  /monitor: panel de logs en tiempo real
+"""
+import asyncio
+import collections
+import datetime
+import json
+import logging
+import os
+import signal
+import subprocess
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, Request, HTTPException, BackgroundTasks
+from fastapi.responses import HTMLResponse, JSONResponse
+
+import config
+import state
+from services import telegram as telegram_svc
+from services import acuity   as acuity_svc
+from handlers import visita_creada, visita_modificada, visita_cancelada
+
+# ─── Logging ──────────────────────────────────────────────────────────────────
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+)
+logger = logging.getLogger("scheduling-visitas")
+
+MAX_HISTORY = 100
+_history: collections.deque = collections.deque(maxlen=MAX_HISTORY)
+
+
+class _MonitorHandler(logging.Handler):
+    def emit(self, record):
+        _history.append({
+            "time":    datetime.datetime.fromtimestamp(record.created).strftime("%d/%m %H:%M:%S"),
+            "level":   record.levelname,
+            "message": self.format(record),
+        })
+
+
+_mh = _MonitorHandler()
+_mh.setFormatter(logging.Formatter("%(message)s"))
+logger.addHandler(_mh)
+
+# ─── Dispatcher de acciones ───────────────────────────────────────────────────
+
+_ACTIONS = {
+    "appointment.scheduled":    visita_creada.run,
+    "appointment.rescheduled":  visita_modificada.run,
+    "appointment.canceled":     visita_cancelada.run,
+}
+
+# ─── App ──────────────────────────────────────────────────────────────────────
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await telegram_svc.send_alert("✅ *Scheduling Visitas* — servicio iniciado")
+    logger.info("🗓️  Scheduling Visitas iniciado — esperando webhooks de Acuity")
+    yield
+    await telegram_svc.send_alert("🔴 *Scheduling Visitas* — servicio detenido")
+
+
+app = FastAPI(title="Scheduling Visitas Bot", lifespan=lifespan)
+
+# ─── Endpoints ────────────────────────────────────────────────────────────────
+
+@app.get("/")
+async def root():
+    return {
+        "status":  "ok",
+        "bot":     "scheduling-visitas",
+        "actions": list(_ACTIONS),
+    }
+
+
+@app.post("/acuity")
+async def acuity_webhook(request: Request, background_tasks: BackgroundTasks):
+    """
+    Recibe webhooks de Acuity Scheduling.
+    Payload form-encoded: action, id, calendarID, appointmentTypeID.
+    """
+    raw_body = await request.body()
+
+    # Verificar firma HMAC si ACUITY_WEBHOOK_SECRET está configurado
+    sig = request.headers.get("X-Acuity-Signature", "")
+    if not acuity_svc.verify_signature(raw_body, sig):
+        logger.warning("Webhook rechazado: firma inválida")
+        raise HTTPException(status_code=403, detail="Firma inválida")
+
+    # Parsear payload (form-encoded o JSON)
+    content_type = request.headers.get("content-type", "")
+    if "application/json" in content_type:
+        try:
+            payload = await request.json()
+        except Exception:
+            payload = {}
+    else:
+        form = await request.form()
+        payload = dict(form)
+
+    action         = payload.get("action", "")
+    appointment_id = payload.get("id", "")
+    logger.info(f"Acuity webhook | action={action} | appointment_id={appointment_id}")
+
+    handler = _ACTIONS.get(action)
+    if handler is None:
+        logger.warning(f"Acción desconocida: {action!r}")
+        return JSONResponse(
+            status_code=400,
+            content={"error": f"Acción desconocida: {action}", "disponibles": list(_ACTIONS)},
+        )
+
+    # Procesar en background para devolver 200 inmediatamente a Acuity
+    background_tasks.add_task(_run_handler, handler, payload, action)
+    return {"status": "ok", "action": action}
+
+
+async def _run_handler(handler, payload: dict, action: str):
+    try:
+        result = await handler(payload)
+        logger.info(f"[{action}] OK → {json.dumps(result, ensure_ascii=False)[:300]}")
+    except Exception as exc:
+        logger.error(f"[{action}] Error: {exc}", exc_info=True)
+        await telegram_svc.send_alert(
+            f"⚠️ *Scheduling Visitas* — error en `{action}`\n"
+            f"❌ `{type(exc).__name__}: {str(exc)[:200]}`"
+        )
+
+
+@app.post("/deploy")
+async def deploy(request: Request, background_tasks: BackgroundTasks):
+    """Git pull + reinicio del servicio vía SIGTERM (systemd lo relanza)."""
+    token = request.query_params.get("token", "")
+    if not config.DEPLOY_TOKEN or token != config.DEPLOY_TOKEN:
+        raise HTTPException(status_code=403, detail="Token inválido")
+
+    if not config.DEPLOY_DIR:
+        raise HTTPException(status_code=500, detail="DEPLOY_DIR no configurado")
+
+    result = subprocess.run(
+        ["git", "-C", config.DEPLOY_DIR, "pull"],
+        capture_output=True, text=True, timeout=30,
+    )
+    output = (result.stdout + result.stderr).strip()
+    logger.info(f"[deploy] git pull → {output}")
+
+    background_tasks.add_task(_restart_after_delay)
+    return {"status": "ok", "git": output}
+
+
+async def _restart_after_delay():
+    await asyncio.sleep(1)
+    logger.info("[deploy] Reiniciando proceso para aplicar cambios…")
+    os.kill(os.getpid(), signal.SIGTERM)
+
+
+@app.get("/monitor", response_class=HTMLResponse)
+async def monitor():
+    return _render_monitor()
+
+
+# ─── Monitor HTML ─────────────────────────────────────────────────────────────
+
+def _render_monitor() -> str:
+    # ── Log view ──────────────────────────────────────────────────────────────
+    log_rows = ""
+    for entry in reversed(list(_history)):
+        bg    = {"ERROR": "#2d0a0a", "WARNING": "#2d1f00"}.get(entry["level"], "#1a1a2e")
+        color = {"ERROR": "#e74c3c", "WARNING": "#f39c12", "INFO": "#3498db"}.get(entry["level"], "#aaa")
+        msg   = entry["message"].replace("<", "&lt;").replace(">", "&gt;")
+        log_rows += (
+            f'<tr style="background:{bg}">'
+            f'<td class="ts">{entry["time"]}</td>'
+            f'<td class="lv" style="color:{color}">{entry["level"]}</td>'
+            f'<td class="ms">{msg}</td>'
+            f'</tr>'
+        )
+    if not log_rows:
+        log_rows = '<tr><td colspan="3" style="text-align:center;color:#555;padding:30px">Sin eventos aún — esperando webhooks de Acuity…</td></tr>'
+
+    # ── Summary view ──────────────────────────────────────────────────────────
+    ACTION_COLOR = {
+        "creada":     "#2ecc71",
+        "modificada": "#f39c12",
+        "cancelada":  "#e74c3c",
+    }
+    ACTION_ICON = {
+        "creada":     "✅",
+        "modificada": "🔄",
+        "cancelada":  "❌",
+    }
+
+    bloques = ""
+    for i, s in enumerate(list(state.summaries)):
+        ac   = ACTION_COLOR.get(s["action"], "#aaa")
+        icon = ACTION_ICON.get(s["action"], "·")
+        subj = s["client"].replace("<", "&lt;")[:40]
+
+        bloques += f"""
+        <tr class="sm-head" onclick="toggle({i})" title="Clic para expandir">
+          <td class="ts">{s["time"]}</td>
+          <td class="sm-arrow" id="arr-{i}">▶</td>
+          <td class="sm-from-h">{subj}<br><span class="sm-mail">{s["email"]}</span></td>
+          <td class="sm-appt">#{s["appointment_id"]}</td>
+          <td style="color:{ac};white-space:nowrap">{icon} {s["action"].capitalize()}</td>
+          <td class="ms">{s["result"].replace("<","&lt;")}</td>
+        </tr>
+        <tr class="sm-detail" id="det-{i}" style="display:none">
+          <td colspan="6" style="padding:8px 20px;background:#0d0d1f;font-size:.8em;color:#aaa">
+            Bitrix24 ID: <strong style="color:#9b59b6">{s["bitrix_id"] or "—"}</strong>
+            &nbsp;·&nbsp;
+            Acuity ID: <strong style="color:#3498db">{s["appointment_id"]}</strong>
+          </td>
+        </tr>"""
+
+    if not bloques:
+        bloques = '<tr><td colspan="6" style="text-align:center;color:#555;padding:30px">Sin citas procesadas aún…</td></tr>'
+
+    return f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Monitor — Scheduling Visitas</title>
+<style>
+  * {{ box-sizing:border-box; margin:0; padding:0; }}
+  body {{ font-family:monospace; background:#0f0f1a; padding:24px; color:#eee; }}
+  .topbar {{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; flex-wrap:wrap; gap:10px; }}
+  h1 {{ color:#e94560; font-size:1.3em; }}
+  .badge {{ background:#2ecc71; color:#fff; padding:2px 10px; border-radius:10px; font-size:.72em; margin-left:8px; vertical-align:middle; }}
+  .toolbar {{ display:flex; gap:8px; align-items:center; }}
+  .btn {{ background:#16213e; border:1px solid #2a2a4a; color:#ccc; padding:5px 14px; border-radius:6px; cursor:pointer; font-family:monospace; font-size:12px; transition:background .15s; text-decoration:none; display:inline-block; }}
+  .btn:hover {{ background:#1f2f50; color:#fff; }}
+  .btn:disabled {{ opacity:.35; cursor:default; }}
+  .btn-pause  {{ border-color:#e74c3c; color:#e74c3c; }}
+  .btn-resume {{ border-color:#2ecc71; color:#2ecc71; }}
+  #ticker {{ color:#555; font-size:12px; min-width:50px; text-align:right; }}
+  .sub {{ color:#555; font-size:12px; margin:0 0 16px; }}
+  .sub code {{ background:#16213e; padding:1px 6px; border-radius:3px; margin:0 2px; color:#9b59b6; }}
+  table {{ width:100%; border-collapse:collapse; background:#1a1a2e; border:1px solid #2a2a4a; border-radius:8px; overflow:hidden; margin-bottom:24px; }}
+  th {{ background:#16213e; color:#aaa; padding:8px 12px; text-align:left; font-size:.8em; letter-spacing:.5px; }}
+  .ts {{ white-space:nowrap; width:115px; padding:5px 10px; color:#bbb; font-size:.78em; }}
+  .lv {{ width:70px; padding:5px 8px; font-size:.78em; font-weight:600; }}
+  .ms {{ padding:5px 10px; font-size:.82em; word-break:break-word; color:#ddd; }}
+  td {{ padding:5px 10px; font-size:.82em; vertical-align:top; }}
+  .sm-head {{ cursor:pointer; transition:background .1s; }}
+  .sm-head:hover td {{ background:#1f2540; }}
+  .sm-arrow {{ width:20px; padding:5px 4px; color:#555; font-size:.7em; }}
+  .sm-from-h {{ padding:5px 10px; font-size:.82em; min-width:140px; }}
+  .sm-appt {{ padding:5px 10px; font-size:.78em; color:#3498db; white-space:nowrap; }}
+  .sm-mail {{ color:#555; font-size:.75em; }}
+  .section-title {{ color:#9b59b6; font-size:.85em; font-weight:600; letter-spacing:.5px; margin:20px 0 6px; }}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <h1>🗓️ Scheduling Visitas <span class="badge">live</span></h1>
+    <div class="toolbar">
+      <button class="btn btn-pause"  id="btn-pausar"  onclick="pauseRefresh()">⏸ Pausar</button>
+      <button class="btn btn-resume" id="btn-retomar" onclick="resumeRefresh()" disabled>▶ Retomar</button>
+      <span id="ticker">5 s</span>
+    </div>
+  </div>
+  <p class="sub">Acuity → <code>appointment.scheduled</code> <code>appointment.rescheduled</code> <code>appointment.canceled</code> &nbsp;·&nbsp; refresco 5 s</p>
+
+  <p class="section-title">CITAS PROCESADAS</p>
+  <table>
+    <thead><tr><th>Fecha y hora</th><th></th><th>Cliente</th><th>Acuity ID</th><th>Acción</th><th>Resultado</th></tr></thead>
+    <tbody>{bloques}</tbody>
+  </table>
+
+  <p class="section-title">LOG DEL SISTEMA</p>
+  <table>
+    <thead><tr><th>Hora</th><th>Nivel</th><th>Mensaje</th></tr></thead>
+    <tbody>{log_rows}</tbody>
+  </table>
+
+  <script>
+    function toggle(i) {{
+      const det = document.getElementById('det-' + i);
+      const arr = document.getElementById('arr-' + i);
+      if (det.style.display === 'none') {{
+        det.style.display = 'table-row';
+        arr.textContent = '▼';
+      }} else {{
+        det.style.display = 'none';
+        arr.textContent = '▶';
+      }}
+    }}
+    const INTERVAL = 5;
+    let remaining = INTERVAL, countdown, reloader;
+    function startTimers() {{
+      remaining = INTERVAL;
+      countdown = setInterval(() => {{
+        remaining--;
+        document.getElementById('ticker').textContent = remaining + ' s';
+        if (remaining <= 0) remaining = INTERVAL;
+      }}, 1000);
+      reloader = setInterval(() => location.reload(), INTERVAL * 1000);
+    }}
+    function pauseRefresh() {{
+      clearInterval(countdown); clearInterval(reloader);
+      document.getElementById('ticker').textContent = '—';
+      document.getElementById('btn-pausar').disabled = true;
+      document.getElementById('btn-retomar').disabled = false;
+    }}
+    function resumeRefresh() {{
+      document.getElementById('btn-pausar').disabled = false;
+      document.getElementById('btn-retomar').disabled = true;
+      startTimers();
+    }}
+    startTimers();
+  </script>
+</body>
+</html>"""

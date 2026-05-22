@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flujo — Scheduling Visitas</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0d0d1a;
+    color: #e0e0e0;
+    padding: 32px 24px;
+    min-height: 100vh;
+  }
+  h1 {
+    text-align: center;
+    font-size: 1.5em;
+    color: #e94560;
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+  }
+  .subtitle {
+    text-align: center;
+    color: #555;
+    font-size: .82em;
+    margin-bottom: 36px;
+  }
+  .subtitle code {
+    background: #16213e;
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: #9b59b6;
+    font-size: .9em;
+  }
+
+  /* ── Leyenda ─────────────────────────────────────────────── */
+  .legend {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 36px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .8em;
+    color: #aaa;
+  }
+  .legend-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+  }
+
+  /* ── Blueprint card ──────────────────────────────────────── */
+  .bp-card {
+    background: #13132a;
+    border: 1px solid #2a2a4a;
+    border-radius: 14px;
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .bp-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+  }
+  .bp-creada::before   { background: #2ecc71; }
+  .bp-modificada::before { background: #f39c12; }
+  .bp-cancelada::before  { background: #e74c3c; }
+
+  .bp-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .bp-num {
+    background: #16213e;
+    border: 1px solid #2a2a4a;
+    border-radius: 8px;
+    padding: 3px 10px;
+    font-size: .78em;
+    color: #9b59b6;
+    font-weight: 700;
+    letter-spacing: .5px;
+  }
+  .bp-title {
+    font-size: 1em;
+    font-weight: 700;
+    letter-spacing: .3px;
+  }
+  .bp-creada   .bp-title { color: #2ecc71; }
+  .bp-modificada .bp-title { color: #f39c12; }
+  .bp-cancelada  .bp-title { color: #e74c3c; }
+
+  .bp-trigger {
+    display: inline-block;
+    background: #1a1a3e;
+    border: 1px solid #3a3a6a;
+    border-radius: 6px;
+    padding: 2px 10px;
+    font-size: .72em;
+    color: #aaa;
+    margin-left: auto;
+  }
+
+  /* ── Flow row ─────────────────────────────────────────────── */
+  .flow {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .flow-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+  .node {
+    background: #1e1e40;
+    border: 1px solid #3a3a6a;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: .78em;
+    text-align: center;
+    min-width: 110px;
+    max-width: 140px;
+    line-height: 1.4;
+    position: relative;
+  }
+  .node .node-label {
+    color: #aaa;
+    font-size: .72em;
+    margin-bottom: 3px;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+  }
+  .node .node-value {
+    font-weight: 600;
+  }
+  .node-acuity   { border-color: #2980b9; }
+  .node-acuity .node-value   { color: #3498db; }
+  .node-fastapi  { border-color: #7f8c8d; }
+  .node-fastapi .node-value  { color: #ecf0f1; }
+  .node-handler  { border-color: #8e44ad; }
+  .node-handler .node-value  { color: #9b59b6; }
+  .node-bitrix   { border-color: #27ae60; }
+  .node-bitrix .node-value   { color: #2ecc71; }
+  .node-bitrix-warn { border-color: #e67e22; }
+  .node-bitrix-warn .node-value { color: #f39c12; }
+  .node-bitrix-fail { border-color: #c0392b; }
+  .node-bitrix-fail .node-value { color: #e74c3c; }
+  .node-wait { border-color: #f39c12; }
+  .node-wait .node-value { color: #f39c12; }
+  .node-decision {
+    background: #1a1a3e;
+    border: 2px dashed #3a3a6a;
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: .74em;
+    text-align: center;
+    min-width: 110px;
+    max-width: 140px;
+    color: #888;
+    font-style: italic;
+  }
+
+  /* Arrows */
+  .arrow {
+    display: flex;
+    align-items: center;
+    padding: 0 6px;
+    color: #3a3a6a;
+    font-size: 1.1em;
+    margin-top: 22px;
+    flex-shrink: 0;
+  }
+  .arrow-label {
+    font-size: .62em;
+    color: #555;
+    margin-top: 3px;
+    text-align: center;
+    max-width: 60px;
+  }
+  .arrow-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Branch layout */
+  .branch {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .branch-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+  .branch-label {
+    font-size: .65em;
+    color: #555;
+    margin-bottom: 3px;
+    padding-left: 4px;
+  }
+
+  /* Fields table */
+  .fields-box {
+    background: #111128;
+    border: 1px solid #2a2a4a;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-top: 16px;
+    font-size: .74em;
+  }
+  .fields-box .fields-title {
+    color: #555;
+    text-transform: uppercase;
+    font-size: .75em;
+    letter-spacing: .5px;
+    margin-bottom: 8px;
+  }
+  .fields-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 4px 20px;
+  }
+  .field-row {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+  }
+  .field-key  { color: #8e44ad; font-family: monospace; white-space: nowrap; }
+  .field-sep  { color: #555; }
+  .field-val  { color: #aaa; }
+
+  /* Services row */
+  .services {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 36px;
+  }
+  .service-badge {
+    background: #16213e;
+    border: 1px solid #2a2a4a;
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: .78em;
+    color: #aaa;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .service-badge .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  @media (max-width: 700px) {
+    .flow { flex-direction: column; align-items: flex-start; }
+    .arrow { transform: rotate(90deg); margin: 6px auto; }
+  }
+</style>
+</head>
+<body>
+
+<h1>🗓️ Scheduling Visitas — Flujo de Datos</h1>
+<p class="subtitle">
+  Acuity Scheduling → <code>FastAPI :8006</code> → Handlers → Bitrix24 SPA Entidad 182
+</p>
+
+<!-- Servicios -->
+<div class="services">
+  <div class="service-badge"><span class="dot" style="background:#3498db"></span> Acuity Scheduling (webhook)</div>
+  <div class="service-badge"><span class="dot" style="background:#ecf0f1"></span> FastAPI (puerto 8006)</div>
+  <div class="service-badge"><span class="dot" style="background:#2ecc71"></span> Bitrix24 CRM (SPA 182)</div>
+  <div class="service-badge"><span class="dot" style="background:#f39c12"></span> Telegram (alertas)</div>
+  <div class="service-badge"><span class="dot" style="background:#9b59b6"></span> ngrok (dev local)</div>
+</div>
+
+<!-- Leyenda -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#2ecc71"></div> Visita Creada</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f39c12"></div> Visita Modificada</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#e74c3c"></div> Visita Cancelada</div>
+</div>
+
+<!-- ── BLUEPRINT 01: Visita Creada ──────────────────────────────────────── -->
+<div class="bp-card bp-creada">
+  <div class="bp-header">
+    <span class="bp-num">01</span>
+    <span class="bp-title">Visita Creada</span>
+    <span class="bp-trigger">appointment.scheduled</span>
+  </div>
+
+  <div class="flow">
+    <!-- Acuity -->
+    <div class="flow-step">
+      <div class="node node-acuity">
+        <div class="node-label">Trigger</div>
+        <div class="node-value">Acuity</div>
+        <div style="color:#555;font-size:.7em;margin-top:3px">Nueva cita</div>
+      </div>
+    </div>
+
+    <div class="arrow-col">
+      <div class="arrow">→</div>
+      <div class="arrow-label">POST /acuity</div>
+    </div>
+
+    <!-- FastAPI -->
+    <div class="flow-step">
+      <div class="node node-fastapi">
+        <div class="node-label">Endpoint</div>
+        <div class="node-value">FastAPI</div>
+        <div style="color:#555;font-size:.7em;margin-top:3px">Verifica firma HMAC</div>
+      </div>
+    </div>
+
+    <div class="arrow-col">
+      <div class="arrow">→</div>
+      <div class="arrow-label">background</div>
+    </div>
+
+    <!-- Handler -->
+    <div class="flow-step">
+      <div class="node node-handler">
+        <div class="node-label">Handler</div>
+        <div class="node-value">visita_creada.py</div>
+        <div style="color:#555;font-size:.7em;margin-top:3px">GET /appointments/{id}</div>
+      </div>
+    </div>
+
+    <div class="arrow-col">
+      <div class="arrow">→</div>
+      <div class="arrow-label">crm.contact.list</div>
+    </div>
+
+    <!-- Decision contacto -->
+    <div class="flow-step">
+      <div class="node-decision">¿Contacto<br>existe?</div>
+    </div>
+
+    <div class="arrow-col" style="margin-top:22px">
+      <div style="color:#3a3a6a;font-size:.85em">⟶</div>
+    </div>
+
+    <!-- Branch contacto -->
+    <div class="branch" style="margin-top:0">
+      <div class="branch-label">❌ No existe</div>
+      <div class="branch-row">
+        <div class="node node-bitrix" style="min-width:120px">
+          <div class="node-label">Bitrix24</div>
+          <div class="node-value">crm.contact.add</div>
+          <div style="color:#555;font-size:.7em;margin-top:2px">Nombre, email, tel</div>
+        </div>
+      </div>
+      <div class="branch-label" style="margin-top:8px">✅ Existe → buscar deal</div>
+      <div class="branch-row">
+        <div class="node node-bitrix" style="min-width:120px;border-color:#2980b9">
+          <div class="node-label">Bitrix24</div>
+          <div class="node-value" style="color:#3498db">crm.deal.list</div>
+          <div style="color:#555;font-size:.7em;margin-top:2px">Filter: CONTACT_ID</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-col">
+      <div class="arrow">→</div>
+      <div class="arrow-label">crm.item.add</div>
+    </div>
+
+    <!-- Crear visita -->
+    <div class="flow-step">
+      <div class="node node-bitrix">
+        <div class="node-label">Bitrix24</div>
+        <div class="node-value">Crear Visita</div>
+        <div style="color:#555;font-size:.7em;margin-top:3px">SPA 182 · Stage: NEW</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Campos creados -->
+  <div class="fields-box">
+    <div class="fields-title">Campos de la visita creada (crm.item.add)</div>
+    <div class="fields-grid">
+      <div class="field-row"><span class="field-key">stageId</span><span class="field-sep">→</span><span class="field-val">DT182_55:NEW</span></div>
+      <div class="field-row"><span class="field-key">title</span><span class="field-sep">→</span><span class="field-val">Visita {Nombre} - {Tipo} - {Fecha}</span></div>
+      <div class="field-row"><span class="field-key">contactId</span><span class="field-sep">→</span><span class="field-val">ID del contacto Bitrix24</span></div>
+      <div class="field-row"><span class="field-key">ufCrm31_1745787119410</span><span class="field-sep">→</span><span class="field-val">appointment.id (Acuity)</span></div>
+      <div class="field-row"><span class="field-key">ufCrm_1590739351</span><span class="field-sep">→</span><span class="field-val">appointment.datetime (ISO)</span></div>
+      <div class="field-row"><span class="field-key">ufCrm31_1664208311266</span><span class="field-sep">→</span><span class="field-val">appointment.datetime (ISO)</span></div>
+      <div class="field-row"><span class="field-key">ufCrm31_1718778466198</span><span class="field-sep">→</span><span class="field-val">appointment.type</span></div>
+      <div class="field-row"><span class="field-key">ufCrm31_1716073236196</span><span class="field-sep">→</span><span class="field-val">Descripción completa cliente</span></div>
+      <div class="field-row"><span class="field-key">ufCrm31_1664208348434</span><span class="field-sep">→</span><span class="field-val">Valores formulario Acuity</span></div>
+      <div class="field-row"><span class="field-key">ufCrm31_1757428103201</span><span class="field-sep">→</span><span class="field-val">URL del deal (si existe)</span></div>
+      <div class="field-row"><span class="field-key">ufCrm_1590742406</span><span class="field-sep">→</span><span class="field-val">Notes del appointment</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── BLUEPRINT 02: Visita Modificada ─────────────────────────────────── -->
+<div class="bp-card bp-modificada">
+  <div class="bp-header">
+    <span class="bp-num">02</span>
+    <span class="bp-title">Visita Modificada</span>
+    <span class="bp-trigger">appointment.rescheduled</span>
+  </div>
+
+  <div class="flow">
+    <div class="flow-step">
+      <div class="node node-acuity">
+        <div class="node-label">Trigger</div>
+        <div class="node-value">Acuity</div>
+        <div style="color:#555;font-size:.7em;margin-top:3px">Cita modificada</div>
+      </div>
+    </div>
+
+    <div class="arrow-col">
+      <div class="arrow">→</div>
+      <div class="arrow-label">POST /acuity</div>
+    </div>
+
+    <div class="flow-step">
+      <div class="node node-fastapi">
+        <div class="node-label">Endpoint</div>
+        <div class="node-value">FastAPI</div>
+        <div style="color:#555;font-size:.7em;margin-top:3px">Verifica firma HMAC</div>
+      </div>
+    </div>
+
+    <div class="arrow-col">
+      <div class="arrow">→</div>
+      <div class="arrow-label">background</div>
+    </div>
+
+    <div class="flow-step">
+      <div class="node node-wait">
+        <div class="node-label">⏳ Espera</div>
+        <div class="node-value">240 segundos</div>
+        <div style="color:#555;font-size:.7em;margin-top:3px">Evita race condition</div>
+      </div>
+    </div>
+
+    <div class="arrow-col">
+      <div class="arrow">→</div>
+      <div class="arrow-label">GET /appointments</div>
+    </div>
+
+    <div class="flow-step">
+      <div class="node node-handler">
+        <div class="node-label">Handler</div>
+        <div class="node-value">visita_modificada.py</div>
+        <div style="color:#555;font-size:.7em;margin-top:3px">Datos actualizados de Acuity</div>
+      </div>
+    </div>
+
+    <div class="arrow-col">
+      <div class="arrow">→</div>
+      <div class="arrow-label">crm.item.list</div>
+    </div>
+
+    <div class="flow-step">
+      <div class="node node-bitrix" style="border-color:#2980b9">
+        <div class="node-label">Bitrix24</div>
+        <div class="node-value" style="color:#3498db">Buscar Visita</div>
+        <div style="color:#555;font-size:.7em;margin-top:3px">Filter: ufCrm31_1745787119410</div>
+      </div>
+    </div>
+
+    <div class="arrow-col">
+      <div class="arrow">→</div>
+      <div class="arrow-label">crm.item.update</div>
+    </div>
+
+    <div class="flow-step">
+      <div class="node node-bitrix-warn">
+        <div class="node-label">Bitrix24</div>
+        <div class="node-value">Actualizar Visita</div>
+        <div style="color:#555;font-size:.7em;margin-top:3px">Stage: NEW · Nueva fecha</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fields-box">
+    <div class="fields-title">Campos actualizados (crm.item.update)</div>
+    <div class="fields-grid">
+      <div class="field-row"><span class="field-key">stageId</span><span class="field-sep">→</span><span class="field-val">DT182_55:NEW</span></div>
+      <div class="field-row"><span class="field-key">title</span><span class="field-sep">→</span><span class="field-val">Actualizada: Visita {Nombre} - {Tipo} - {Fecha}</span></div>
+      <div class="field-row"><span class="field-key">ufCrm_1590739351</span><span class="field-sep">→</span><span class="field-val">Nueva fecha ISO</span></div>
+      <div class="field-row"><span class="field-key">ufCrm31_1664208311266</span><span class="field-sep">→</span><span class="field-val">Nueva fecha ISO (alternativo)</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── BLUEPRINT 03: Visita Cancelada ──────────────────────────────────── -->
+<div class="bp-card bp-cancelada">
+  <div class="bp-header">
+    <span class="bp-num">03</span>
+    <span class="bp-title">Visita Cancelada</span>
+    <span class="bp-trigger">appointment.canceled</span>
+  </div>
+
+  <div class="flow">
+    <div class="flow-step">
+      <div class="node node-acuity">
+        <div class="node-label">Trigger</div>
+        <div class="node-value">Acuity</div>
+        <div style="color:#555;font-size:.7em;margin-top:3px">Cita cancelada</div>
+      </div>
+    </div>
+
+    <div class="arrow-col">
+      <div class="arrow">→</div>
+      <div class="arrow-label">POST /acuity</div>
+    </div>
+
+    <div class="flow-step">
+      <div class="node node-fastapi">
+        <div class="node-label">Endpoint</div>
+        <div class="node-value">FastAPI</div>
+        <div style="color:#555;font-size:.7em;margin-top:3px">Verifica firma HMAC</div>
+      </div>
+    </div>
+
+    <div class="arrow-col">
+      <div class="arrow">→</div>
+      <div class="arrow-label">background</div>
+    </div>
+
+    <div class="flow-step">
+      <div class="node node-handler">
+        <div class="node-label">Handler</div>
+        <div class="node-value">visita_cancelada.py</div>
+        <div style="color:#555;font-size:.7em;margin-top:3px">GET /appointments/{id}</div>
+      </div>
+    </div>
+
+    <div class="arrow-col">
+      <div class="arrow">→</div>
+      <div class="arrow-label">crm.item.list</div>
+    </div>
+
+    <div class="flow-step">
+      <div class="node node-bitrix" style="border-color:#2980b9">
+        <div class="node-label">Bitrix24</div>
+        <div class="node-value" style="color:#3498db">Buscar Visita</div>
+        <div style="color:#555;font-size:.7em;margin-top:3px">Filter: ufCrm31_1745787119410</div>
+      </div>
+    </div>
+
+    <div class="arrow-col">
+      <div class="arrow">→</div>
+      <div class="arrow-label">crm.item.update</div>
+    </div>
+
+    <div class="flow-step">
+      <div class="node node-bitrix-fail">
+        <div class="node-label">Bitrix24</div>
+        <div class="node-value">Marcar FAIL</div>
+        <div style="color:#555;font-size:.7em;margin-top:3px">Stage: DT182_55:FAIL</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fields-box">
+    <div class="fields-title">Campos actualizados (crm.item.update)</div>
+    <div class="fields-grid">
+      <div class="field-row"><span class="field-key">stageId</span><span class="field-sep">→</span><span class="field-val">DT182_55:FAIL</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Endpoints del servicio ──────────────────────────────────────────── -->
+<div style="background:#13132a;border:1px solid #2a2a4a;border-radius:14px;padding:24px 28px;margin-bottom:24px">
+  <div style="color:#555;font-size:.78em;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px">Endpoints del servicio</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px">
+    <div style="background:#111128;border-radius:8px;padding:10px 14px;font-size:.8em">
+      <span style="color:#2ecc71;font-weight:700">POST</span>
+      <span style="color:#ecf0f1;margin-left:8px;font-family:monospace">/acuity</span>
+      <div style="color:#555;font-size:.85em;margin-top:4px">Webhook de Acuity. Verifica firma HMAC y despacha al handler según acción.</div>
+    </div>
+    <div style="background:#111128;border-radius:8px;padding:10px 14px;font-size:.8em">
+      <span style="color:#3498db;font-weight:700">GET</span>
+      <span style="color:#ecf0f1;margin-left:8px;font-family:monospace">/monitor</span>
+      <div style="color:#555;font-size:.85em;margin-top:4px">Panel de logs en tiempo real. Auto-refresco 5 s.</div>
+    </div>
+    <div style="background:#111128;border-radius:8px;padding:10px 14px;font-size:.8em">
+      <span style="color:#2ecc71;font-weight:700">POST</span>
+      <span style="color:#ecf0f1;margin-left:8px;font-family:monospace">/deploy?token=XXX</span>
+      <div style="color:#555;font-size:.85em;margin-top:4px">Git pull + reinicio del servicio systemd.</div>
+    </div>
+    <div style="background:#111128;border-radius:8px;padding:10px 14px;font-size:.8em">
+      <span style="color:#3498db;font-weight:700">GET</span>
+      <span style="color:#ecf0f1;margin-left:8px;font-family:monospace">/</span>
+      <div style="color:#555;font-size:.85em;margin-top:4px">Status check. Lista acciones disponibles.</div>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center;color:#333;font-size:.75em;margin-top:8px">
+  FastAPI · Puerto 8006 · 192.168.2.197 · GitHub: sistemastt00/fastapi-scheduling-visitas
+</div>
+
+</body>
+</html>
