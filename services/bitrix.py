@@ -78,7 +78,7 @@ async def find_visita_by_acuity_id(acuity_id: str | int) -> dict | None:
         "filter": {
             f"={config.BX_FIELD_ACUITY_ID}": str(acuity_id),
         },
-        "select": ["id", "title", "stageId", config.BX_FIELD_ACUITY_ID],
+        "select": ["id", "title", "stageId", "assignedById", config.BX_FIELD_ACUITY_ID],
     })
     items = data.get("result", {}).get("items", [])
     return items[0] if items else None

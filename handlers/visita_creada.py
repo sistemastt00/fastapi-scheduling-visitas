@@ -115,7 +115,9 @@ async def run(payload: dict) -> dict:
     }
 
     if gestor_id:
-        fields["assignedById"] = gestor_id
+        fields["assignedById"]      = gestor_id
+        fields["ufCrmCreatedBy"]    = gestor_id
+        fields["ufCrmCreatedById"]  = gestor_id
     if centro_bx:
         fields[config.BX_FIELD_CENTRO]     = centro_bx
         fields[config.BX_FIELD_CENTRO_ALT] = centro_bx

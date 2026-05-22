@@ -36,7 +36,15 @@ async def run(payload: dict) -> dict:
         _record_summary(appointment_id, f"{first} {last}", email, "cancelada", msg, "")
         return {"warning": msg}
 
-    item_id = visita.get("id")
+    item_id       = visita.get("id")
+    current_stage = visita.get("stageId", "")
+
+    # Ya está en FAIL — evitar llamada innecesaria (igual que la condición del blueprint)
+    if current_stage == config.BITRIX_STAGE_FAIL:
+        msg = f"Visita ID={item_id} ya estaba en FAIL — sin cambios"
+        logger.info(f"[visita_cancelada] {msg}")
+        _record_summary(appointment_id, f"{first} {last}", email, "cancelada", msg, str(item_id))
+        return {"visita_id": item_id, "stage": current_stage, "skipped": True}
 
     # 3. Actualizar etapa a FAIL
     await bitrix.update_crm_item(
