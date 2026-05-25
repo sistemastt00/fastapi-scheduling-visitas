@@ -246,8 +246,8 @@ h1{text-align:center;font-size:1.35em;color:#e94560;letter-spacing:1px;margin-bo
 
       <div class="split-sep"></div>
 
-      <!-- RAMA NO: Cliente no existe por email -->
-      <div class="split-col no-col">
+      <!-- RAMA NO: Cliente no existe por email → Router 18 -->
+      <div class="split-col no-col" style="max-width:480px">
         <div class="split-label">✗ NO — Cliente no existe (email)</div>
 
         <div class="node n-read">
@@ -257,32 +257,64 @@ h1{text-align:center;font-size:1.35em;color:#e94560;letter-spacing:1px;margin-bo
         </div>
         <div class="vc"><div class="vc-line"></div><div class="vc-arrow"></div></div>
 
-        <!-- Sub-condición: tel existe? -->
-        <div class="d-wrap"><div class="d-shape"></div><div class="d-text">¿contact<br>por tel?</div></div>
+        <!-- Router 18 -->
+        <div class="d-wrap"><div class="d-shape"></div><div class="d-text">¿contact<br>por tel?<br><span style="color:#555;font-size:.85em">Router 18</span></div></div>
 
-        <div class="subsplit" style="width:100%">
-          <div class="subsplit-col sub-yes">
-            <div class="subsplit-label">✓ SÍ<br>Existe</div>
-            <div class="node n-read" style="min-width:120px">
-              <div class="n-type">👤 Contacto</div>
-              <div class="n-title">Usar existente</div>
+        <div class="subsplit" style="width:100%;align-items:flex-start">
+
+          <!-- SÍ PHONE: buscar deals → Router 20 -->
+          <div class="subsplit-col sub-yes" style="flex:1.6">
+            <div class="subsplit-label">✓ SÍ<br>Existe (tel)</div>
+
+            <div class="node n-read" style="min-width:130px">
+              <div class="n-type">🔍 Bitrix24</div>
+              <div class="n-title">crm.deal.list</div>
+              <div class="n-sub">CONTACT_ID = contact.ID</div>
             </div>
-          </div>
+            <div class="vc"><div class="vc-line"></div><div class="vc-arrow"></div></div>
+
+            <!-- Router 20 -->
+            <div class="d-wrap"><div class="d-shape"></div><div class="d-text">deals<br>&gt; 0?<br><span style="color:#555;font-size:.85em">Router 20</span></div></div>
+
+            <div class="subsplit" style="width:100%">
+              <div class="subsplit-col sub-yes">
+                <div class="subsplit-label">✓ SÍ<br>Deal</div>
+                <div class="node n-write" style="min-width:105px">
+                  <div class="n-type">✏️ Bitrix24</div>
+                  <div class="n-title">crm.item.add</div>
+                  <div class="n-sub">con deal URL</div>
+                </div>
+              </div>
+              <div class="subsplit-sep"></div>
+              <div class="subsplit-col sub-no">
+                <div class="subsplit-label">✗ NO<br>Sin Deal</div>
+                <div class="node n-write" style="min-width:105px">
+                  <div class="n-type">✏️ Bitrix24</div>
+                  <div class="n-title">crm.item.add</div>
+                  <div class="n-sub">sin deal URL</div>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /SÍ phone -->
+
           <div class="subsplit-sep"></div>
+
+          <!-- NO PHONE: crear contacto → item.add -->
           <div class="subsplit-col sub-no">
-            <div class="subsplit-label">✗ NO<br>No existe</div>
-            <div class="node n-write" style="min-width:120px">
+            <div class="subsplit-label">✗ NO<br>No existe (tel)</div>
+            <div class="node n-write" style="min-width:115px">
               <div class="n-type">➕ Bitrix24</div>
               <div class="n-title">crm.contact.add</div>
             </div>
-          </div>
-        </div>
+            <div class="vc"><div class="vc-line"></div><div class="vc-arrow"></div></div>
+            <div class="node n-write" style="min-width:115px">
+              <div class="n-type">✏️ Bitrix24</div>
+              <div class="n-title">crm.item.add</div>
+              <div class="n-sub">sin deal URL</div>
+            </div>
+          </div><!-- /NO phone -->
 
-        <div class="vc"><div class="vc-line"></div><div class="vc-arrow"></div></div>
-        <div class="node n-write">
-          <div class="n-type">✏️ Bitrix24</div>
-          <div class="n-title">crm.item.add</div>
-          <div class="n-sub">Stage: NEW · SPA 182</div>
         </div>
 
       </div><!-- /rama NO email -->
@@ -408,7 +440,7 @@ h1{text-align:center;font-size:1.35em;color:#e94560;letter-spacing:1px;margin-bo
     <!-- SLEEP -->
     <div class="node n-sleep">
       <div class="n-type">⏳ util:FunctionSleep</div>
-      <div class="n-title">240 segundos</div>
+      <div class="n-title">60 segundos</div>
       <div class="n-sub">espera para evitar race condition</div>
     </div>
     <div class="vc"><div class="vc-line"></div><div class="vc-arrow"></div></div>
