@@ -31,6 +31,17 @@ async def search_contacts_by_email(email: str) -> list[dict]:
     return data.get("result", [])
 
 
+async def search_contacts_by_phone(phone: str) -> list[dict]:
+    """Busca contactos cuyo campo PHONE coincida. Devuelve lista (vacía si no hay)."""
+    data = await api_call("crm.contact.list", {
+        "limit":  1,
+        "order":  {"DATE_CREATE": "DESC"},
+        "filter": {"PHONE": phone},
+        "select": ["ID", "NAME", "LAST_NAME", "PHONE", "EMAIL", "ASSIGNED_BY_ID"],
+    })
+    return data.get("result", [])
+
+
 async def create_contact(fields: dict) -> dict:
     """Crea un contacto CRM. Devuelve {result: id}."""
     return await api_call("crm.contact.add", {"fields": fields})

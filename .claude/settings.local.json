@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Sistemas\\\\Documents\\\\FastAPI\\\\FastAPI - Scheduling Visitas\" -Recurse -Force)",
+      "Bash(Select-Object -Property FullName, PSIsContainer)",
+      "Bash(Sort-Object FullName)",
+      "Bash(Format-Table -AutoSize)",
+      "Bash(ls -la \"C:\\\\Users\\\\Sistemas\\\\Documents\\\\FastAPI\\\\FastAPI - Email CGI\" 2>&1 | head -50)",
+      "Bash(grep -n \"crm\\\\\\\\.item\\\\\\\\.add\\\\|crm\\\\\\\\.item\\\\\\\\.update\\\\|crm\\\\\\\\.item\\\\\\\\.list\\\\|crm\\\\\\\\.contact\\\\\\\\.add\\\\|crm\\\\\\\\.contact\\\\\\\\.list\\\\|crm\\\\\\\\.deal\\\\\\\\.list\" \"C:\\\\Users\\\\Sistemas\\\\Documents\\\\FastAPI\\\\FastAPI - Scheduling Visitas\\\\blueprints\\\\01. Visita Creada.blueprint.json\")",
+      "Bash(git init *)",
+      "Bash(git remote *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(curl -s -u \"36312399:dfc6b969a3b6bc96c75336fcacb089e8\" \"https://acuityscheduling.com/api/v1/me\")",
+      "Bash(python -m json.tool)",
+      "Bash(curl -s -u \"36312399:dfc6b969a3b6bc96c75336fcacb089e8\" \"https://acuityscheduling.com/api/v1/appointment-types\")",
+      "Bash(python -c \"import json,sys; types=json.load\\(sys.stdin\\); [print\\(f'ID: {t[\\\\\"id\\\\\"]:>8} | {t[\\\\\"name\\\\\"]}'\\) for t in types]\")",
+      "Bash(python -c \"import json,sys; types=json.load\\(sys.stdin\\); names=sorted\\(set\\(t['name'] for t in types\\)\\); [print\\(repr\\(n\\)\\) for n in names]\")",
+      "Bash(python -c ' *)",
+      "Bash(powershell -Command ' *)",
+      "Bash(command -v sshpass)",
+      "Bash(which plink.exe 2>/dev/null || ls \"/mnt/c/Program Files/PuTTY/plink.exe\" 2>/dev/null && echo \"OK\" || echo \"NO\")",
+      "Bash(\"/mnt/c/Program Files/PuTTY/plink.exe\" -pw \"TuRasero.com\" -batch paucosta@192.168.2.197 \"echo OK && whoami\")",
+      "PowerShell(& \"C:\\\\Program Files\\\\PuTTY\\\\plink.exe\" -pw \"TuRasero.com\" -batch paucosta@192.168.2.197 \"echo OK && whoami\" 2>&1)",
+      "Bash(awk '/\\\\\"routes\\\\\": \\\\[/,/^\\\\s*\\\\},\\\\s*{.*\"flow\"/ {print NR\": \"$0}' \"C:\\\\Users\\\\Sistemas\\\\Documents\\\\FastAPI\\\\FastAPI - Scheduling Visitas\\\\blueprints\\\\01. Visita Creada.blueprint.json\")"
+    ]
+  }
+}
