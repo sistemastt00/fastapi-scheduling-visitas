@@ -27,7 +27,7 @@ from services import bitrix
 
 logger = logging.getLogger("scheduling-visitas")
 
-_DELAY_SECONDS = 240  # FunctionSleep del blueprint
+_DELAY_SECONDS = 60  # FunctionSleep del blueprint (reducido de 240s)
 
 
 async def run(payload: dict) -> dict:
