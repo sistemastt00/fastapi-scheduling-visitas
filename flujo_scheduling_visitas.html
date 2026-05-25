@@ -2,457 +2,569 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Flujo — Scheduling Visitas</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#0d0d1a;color:#e0e0e0;padding:28px 20px;min-height:100vh}
-h1{text-align:center;font-size:1.4em;color:#e94560;margin-bottom:4px;letter-spacing:1px}
-.subtitle{text-align:center;color:#555;font-size:.8em;margin-bottom:28px}
-.subtitle code{background:#16213e;padding:2px 8px;border-radius:4px;color:#9b59b6}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0b18;color:#ddd;padding:32px 20px}
 
-/* Services row */
-.services{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:28px}
-.svc{background:#16213e;border:1px solid #2a2a4a;border-radius:20px;padding:5px 14px;font-size:.76em;color:#aaa;display:flex;align-items:center;gap:6px}
-.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+/* ── Página ──────────────────────────────────────────── */
+h1{text-align:center;font-size:1.35em;color:#e94560;letter-spacing:1px;margin-bottom:4px}
+.page-sub{text-align:center;color:#444;font-size:.78em;margin-bottom:28px}
+.page-sub code{background:#16213e;color:#9b59b6;padding:1px 7px;border-radius:4px}
 
-/* Blueprint card */
-.bp{background:#13132a;border:1px solid #2a2a4a;border-radius:14px;padding:22px 24px;margin-bottom:20px;position:relative}
-.bp::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;border-radius:14px 0 0 14px}
-.bp-1::before{background:#2ecc71}
-.bp-2::before{background:#f39c12}
-.bp-3::before{background:#e74c3c}
-.bp-header{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
-.bp-num{background:#16213e;border:1px solid #2a2a4a;border-radius:6px;padding:2px 9px;font-size:.75em;color:#9b59b6;font-weight:700}
-.bp-title{font-size:.98em;font-weight:700}
-.bp-1 .bp-title{color:#2ecc71}
-.bp-2 .bp-title{color:#f39c12}
-.bp-3 .bp-title{color:#e74c3c}
-.bp-trigger{margin-left:auto;background:#1a1a3e;border:1px solid #3a3a6a;border-radius:5px;padding:2px 9px;font-size:.7em;color:#888;font-family:monospace}
+/* ── Blueprint card ──────────────────────────────────── */
+.bp{border-radius:14px;border:1px solid #1e1e3a;background:#0f0f1e;margin-bottom:32px;overflow:hidden}
+.bp-hdr{display:flex;align-items:center;gap:10px;padding:14px 22px;border-bottom:1px solid #1a1a35}
+.bp-num{background:#1a1a35;border:1px solid #2a2a55;border-radius:6px;padding:2px 10px;font-size:.74em;color:#9b59b6;font-weight:700}
+.bp-title{font-size:.95em;font-weight:700}
+.bp-1 .bp-title{color:#2ecc71} .bp-2 .bp-title{color:#f39c12} .bp-3 .bp-title{color:#e74c3c}
+.bp-1 .bp-hdr{border-left:4px solid #2ecc71}
+.bp-2 .bp-hdr{border-left:4px solid #f39c12}
+.bp-3 .bp-hdr{border-left:4px solid #e74c3c}
+.bp-action{margin-left:auto;background:#12122a;border:1px solid #2a2a55;border-radius:4px;padding:2px 9px;font-size:.68em;color:#666;font-family:monospace}
+.bp-body{padding:28px 22px}
 
-/* Flow columns */
-.flow{display:flex;flex-direction:column;gap:0;align-items:flex-start;width:100%}
+/* ── Flow (contenedor principal vertical) ─────────────── */
+.flow{display:flex;flex-direction:column;align-items:center;gap:0;width:100%}
 
-/* Row in the flow */
-.row{display:flex;align-items:flex-start;gap:0;width:100%}
+/* ── Nodos ────────────────────────────────────────────── */
+.node{border-radius:8px;border:1px solid;padding:9px 18px;text-align:center;min-width:180px;max-width:280px;position:relative}
+.node .n-type{font-size:.58em;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;opacity:.7}
+.node .n-title{font-size:.8em;font-weight:700;color:#eee}
+.node .n-sub{font-size:.68em;color:#666;margin-top:3px}
 
-/* Node types */
-.node{border-radius:9px;padding:9px 13px;font-size:.77em;min-width:130px;max-width:180px;line-height:1.35;border:1px solid #3a3a6a;background:#1e1e40;flex-shrink:0}
-.node .nlabel{color:#666;font-size:.7em;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
-.node .nval{font-weight:600}
-.n-trigger .nval{color:#3498db}  .n-trigger{border-color:#2980b9}
-.n-api    .nval{color:#ecf0f1}  .n-api{border-color:#7f8c8d}
-.n-bitrix .nval{color:#2ecc71}  .n-bitrix{border-color:#27ae60}
-.n-bitrix-r .nval{color:#3498db}.n-bitrix-r{border-color:#2980b9}
-.n-warn   .nval{color:#f39c12}  .n-warn{border-color:#e67e22}
-.n-fail   .nval{color:#e74c3c}  .n-fail{border-color:#c0392b}
-.n-handler .nval{color:#9b59b6} .n-handler{border-color:#8e44ad}
-.n-sleep  .nval{color:#f39c12}  .n-sleep{border-color:#e67e22;background:#1e1a10}
-.n-set    .nval{color:#aaa}     .n-set{border-color:#555;background:#181830}
-.n-skip   .nval{color:#555}     .n-skip{border-color:#333;background:#111120}
+.n-trigger  {background:#0a1f35;border-color:#2980b9} .n-trigger  .n-type{color:#3498db}
+.n-api      {background:#1a1a30;border-color:#555}    .n-api      .n-type{color:#aaa}
+.n-vars     {background:#13112a;border-color:#553388} .n-vars     .n-type{color:#9b59b6}
+.n-sleep    {background:#1f130a;border-color:#e67e22} .n-sleep    .n-type{color:#f39c12}
+.n-read     {background:#0a1f2a;border-color:#1a6080} .n-read     .n-type{color:#3498db}
+.n-write    {background:#0a2010;border-color:#27ae60} .n-write    .n-type{color:#2ecc71}
+.n-fail     {background:#200a0a;border-color:#c0392b} .n-fail     .n-type{color:#e74c3c}
+.n-skip     {background:#111118;border-color:#222235} .n-skip     .n-type{color:#444}
+.n-skip .n-title{color:#444}  .n-skip .n-sub{color:#333}
 
-/* Diamond condition */
-.cond{position:relative;margin:0 6px;flex-shrink:0;display:flex;flex-direction:column;align-items:center}
-.diamond{background:#16213e;border:2px solid #9b59b6;transform:rotate(45deg);width:22px;height:22px;flex-shrink:0}
-.cond-box{background:#161630;border:1px dashed #8e44ad;border-radius:7px;padding:6px 10px;font-size:.7em;color:#9b59b6;min-width:130px;max-width:200px;text-align:center;line-height:1.4}
-.cond-box .cop{color:#555;font-size:.85em;display:block;margin-bottom:2px}
+/* ── Conector vertical ────────────────────────────────── */
+.vc{display:flex;flex-direction:column;align-items:center}
+.vc-line{width:2px;height:22px;background:#1e1e40}
+.vc-arrow{width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid #1e1e40}
+.vc-label{font-size:.62em;color:#2ecc71;font-weight:700;margin:2px 0}
+.vc-label.no{color:#e74c3c}
 
-/* Arrow */
-.arr{display:flex;align-items:center;padding:0 4px;color:#3a3a6a;font-size:1em;flex-shrink:0;margin-top:16px}
-.arr-d{display:flex;flex-direction:column;align-items:center;padding:0;flex-shrink:0}
-.arr-down{color:#3a3a6a;font-size:.9em;line-height:1;padding:3px 0}
-.arr-label{font-size:.6em;color:#444;text-align:center;max-width:70px}
+/* ── Diamante condición ───────────────────────────────── */
+.d-wrap{display:flex;align-items:center;justify-content:center;width:160px;height:120px;margin:0 auto;position:relative}
+.d-shape{position:absolute;width:84px;height:84px;background:#110f26;border:2px solid #9b59b6;transform:rotate(45deg);border-radius:3px}
+.d-text{position:relative;z-index:2;text-align:center;font-size:.68em;color:#c39ef5;font-weight:700;max-width:100px;line-height:1.35;padding:0 4px}
 
-/* Branch container */
-.branch-wrap{display:flex;flex-direction:column;gap:8px;border-left:2px solid #2a2a4a;padding-left:14px;margin-left:8px}
-.branch-item{display:flex;align-items:flex-start;gap:0}
-.branch-tag{font-size:.65em;padding:2px 7px;border-radius:4px;white-space:nowrap;font-weight:700;margin-top:12px;margin-right:6px;flex-shrink:0}
-.tag-yes{background:#143d14;color:#2ecc71;border:1px solid #27ae60}
-.tag-no {background:#3d1414;color:#e74c3c;border:1px solid #c0392b}
-.tag-si {background:#143d14;color:#2ecc71;border:1px solid #27ae60}
-.tag-no2{background:#3d1414;color:#e74c3c;border:1px solid #c0392b}
+/* ── Condición simple: SÍ↓ NO→SKIP ──────────────────── */
+.cond-row{display:flex;align-items:center;justify-content:center;gap:0;width:100%}
+.cond-main{display:flex;flex-direction:column;align-items:center}
+.cond-no-branch{display:flex;align-items:center;gap:8px;margin-left:4px}
+.no-arrow{font-size:.68em;font-weight:700;color:#e74c3c;white-space:nowrap;padding:0 4px}
+.yes-arrow{display:flex;flex-direction:column;align-items:center}
+.yes-label{font-size:.65em;font-weight:700;color:#2ecc71;margin:2px 0}
 
-/* Fields */
-.fields{background:#111128;border:1px solid #2a2a4a;border-radius:8px;padding:10px 14px;margin-top:14px;font-size:.72em}
-.fields .ftitle{color:#555;text-transform:uppercase;font-size:.72em;letter-spacing:.4px;margin-bottom:8px}
-.fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:4px 18px}
-.fr{display:flex;gap:6px;align-items:baseline}
-.fk{color:#8e44ad;font-family:monospace;white-space:nowrap;font-size:.95em}
-.fv{color:#aaa}
-.fs{color:#555}
+/* ── Split: dos ramas ────────────────────────────────── */
+.split{display:flex;align-items:flex-start;justify-content:center;gap:0;width:100%;margin-top:0}
+.split-col{flex:1;display:flex;flex-direction:column;align-items:center;border-top:2px solid;padding-top:14px;max-width:380px}
+.split-col.yes-col{border-color:#27ae60}
+.split-col.no-col {border-color:#c0392b}
+.split-sep{width:1px;background:#1a1a35;align-self:stretch}
+.split-label{font-size:.68em;font-weight:700;margin-bottom:12px;text-align:center;padding:3px 10px;border-radius:10px}
+.yes-col .split-label{color:#2ecc71;background:#0a2010;border:1px solid #27ae60}
+.no-col  .split-label{color:#e74c3c;background:#200a0a;border:1px solid #c0392b}
 
-/* Switch table */
-.sw-box{background:#0f0f22;border:1px solid #2a2a4a;border-radius:8px;padding:10px 14px;margin-top:14px;font-size:.71em}
-.sw-box .sw-title{color:#9b59b6;font-size:.78em;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px}
-.sw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:3px 16px}
-.sw-row{display:flex;gap:8px;align-items:baseline}
-.sw-k{color:#aaa;font-size:.92em}
-.sw-v{color:#2ecc71;font-family:monospace;font-size:.92em}
+/* ── Sub-split dentro de rama ────────────────────────── */
+.subsplit{display:flex;align-items:flex-start;justify-content:center;gap:0;width:100%}
+.subsplit-col{flex:1;display:flex;flex-direction:column;align-items:center;border-top:2px solid #2a2a4a;padding-top:10px;max-width:200px}
+.subsplit-sep{width:1px;background:#1a1a35;align-self:stretch}
+.subsplit-label{font-size:.63em;font-weight:700;margin-bottom:10px;padding:2px 8px;border-radius:8px;text-align:center}
+.sub-yes .subsplit-label{color:#2ecc71;background:#081508;border:1px solid #1a5520}
+.sub-no  .subsplit-label{color:#e74c3c;background:#150808;border:1px solid #551515}
 
-/* Indent levels */
-.indent-1{padding-left:24px}
-.indent-2{padding-left:48px}
+/* ── Merge ────────────────────────────────────────────── */
+.merge{display:flex;flex-direction:column;align-items:center;width:100%;margin:0}
+.merge-bar{width:65%;height:2px;background:#1e1e40;margin-bottom:0}
+.merge-dot{width:10px;height:10px;border-radius:50%;background:#1e1e40;margin-bottom:0}
+.merge-note{font-size:.6em;color:#333;margin:4px 0}
 
-.sep{height:1px;background:#1a1a35;margin:8px 0}
+/* ── Tabla de switches ────────────────────────────────── */
+.sw-box{background:#0a0a1a;border:1px solid #1a1a35;border-radius:8px;padding:10px 14px;max-width:700px;width:100%;font-size:.7em;margin:4px 0}
+.sw-hdr{color:#9b59b6;font-size:.75em;text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px;font-weight:700}
+.sw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:2px 12px}
+.sw-r{display:flex;gap:6px} .sw-k{color:#aaa} .sw-v{color:#2ecc71;font-family:monospace}
 
-/* Endpoints */
-.ep-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-top:14px}
-.ep{background:#111128;border-radius:8px;padding:10px 14px;font-size:.78em}
-.ep .method{font-weight:700}
-.ep .path{font-family:monospace;margin-left:8px}
-.ep .desc{color:#555;font-size:.85em;margin-top:4px}
-.get{color:#3498db} .post{color:#2ecc71}
+/* ── Campos de update/add ─────────────────────────────── */
+.fields-box{background:#080816;border:1px solid #1a1a35;border-radius:7px;padding:9px 12px;max-width:480px;width:100%;font-size:.68em;margin:4px 0}
+.fields-hdr{color:#555;text-transform:uppercase;font-size:.72em;letter-spacing:.4px;margin-bottom:6px}
+.field-r{display:flex;gap:6px;line-height:1.6} .field-k{color:#8e44ad;font-family:monospace} .field-v{color:#aaa}
 </style>
 </head>
 <body>
 
-<h1>🗓️ Scheduling Visitas — Flujo con Condicionales</h1>
-<p class="subtitle">
-  Acuity → <code>FastAPI :8006</code> → Handlers Python → Bitrix24 SPA 182
-  &nbsp;·&nbsp; Réplica exacta de los 3 blueprints Make.com
-</p>
-
-<div class="services">
-  <div class="svc"><span class="dot" style="background:#3498db"></span>Acuity Scheduling</div>
-  <div class="svc"><span class="dot" style="background:#ecf0f1"></span>FastAPI :8006</div>
-  <div class="svc"><span class="dot" style="background:#2ecc71"></span>Bitrix24 SPA 182</div>
-  <div class="svc"><span class="dot" style="background:#f39c12"></span>Telegram alertas</div>
-  <div class="svc"><span class="dot" style="background:#9b59b6"></span>ngrok (dev)</div>
-</div>
+<h1>🗓️ Scheduling Visitas — Diagrama de Flujo</h1>
+<p class="page-sub">Acuity Scheduling → <code>POST /acuity</code> → FastAPI :8006 → Handlers Python → Bitrix24 SPA 182</p>
 
 
-<!-- ══════════════════════════════════════════════════════════════
+<!-- ═══════════════════════════════════════════════════════
      BLUEPRINT 01 — VISITA CREADA
-══════════════════════════════════════════════════════════════ -->
+════════════════════════════════════════════════════════ -->
 <div class="bp bp-1">
-  <div class="bp-header">
+  <div class="bp-hdr">
     <span class="bp-num">01</span>
     <span class="bp-title">Visita Creada</span>
-    <span class="bp-trigger">appointment.scheduled</span>
+    <span class="bp-action">appointment.scheduled</span>
   </div>
-
+  <div class="bp-body">
   <div class="flow">
 
-    <!-- Trigger + filtro acción -->
-    <div class="row">
-      <div class="node n-trigger"><div class="nlabel">Trigger Acuity</div><div class="nval">watchAppointments</div><div style="color:#555;font-size:.7em;margin-top:3px">action = scheduled</div></div>
-      <div class="arr">→</div>
-      <div class="node n-api"><div class="nlabel">Acuity API</div><div class="nval">getAppointment</div><div style="color:#555;font-size:.7em;margin-top:3px">GET /appointments/{id}</div></div>
+    <!-- TRIGGER -->
+    <div class="node n-trigger">
+      <div class="n-type">⚡ Trigger Acuity</div>
+      <div class="n-title">watchAppointments</div>
+      <div class="n-sub">action = "appointment.scheduled"</div>
+    </div>
+    <div class="vc"><div class="vc-line"></div><div class="vc-arrow"></div></div>
+
+    <!-- GET APPOINTMENT -->
+    <div class="node n-api">
+      <div class="n-type">🔌 Acuity API</div>
+      <div class="n-title">getAppointment(id)</div>
+      <div class="n-sub">GET /api/v1/appointments/{id}</div>
+    </div>
+    <div class="vc"><div class="vc-line"></div><div class="vc-arrow"></div></div>
+
+    <!-- CONDICIÓN: canceled == false -->
+    <div class="cond-row">
+      <div class="cond-main">
+        <div class="d-wrap">
+          <div class="d-shape"></div>
+          <div class="d-text">canceled<br>== "false"?</div>
+        </div>
+      </div>
+      <div class="cond-no-branch">
+        <span class="no-arrow">NO ──▶</span>
+        <div class="node n-skip" style="min-width:140px">
+          <div class="n-type">⛔ STOP</div>
+          <div class="n-title">Ignorar</div>
+          <div class="n-sub">cita cancelada</div>
+        </div>
+      </div>
+    </div>
+    <div class="yes-arrow"><div class="yes-label">↓ SÍ (canceled=false)</div></div>
+
+    <!-- SET VARIABLES -->
+    <div class="node n-vars" style="max-width:560px;width:100%;text-align:left">
+      <div class="n-type" style="text-align:center">📐 util:SetVariables</div>
+      <div class="n-title" style="text-align:center;margin-bottom:8px">Calcular variables del blueprint</div>
+      <div style="font-size:.68em;color:#888;line-height:1.7">
+        <b style="color:#9b59b6">fecha_iso</b> = formatDate(<b>addHours</b>(datetime; <b>−1</b>); ISO 8601) &nbsp;·&nbsp;
+        <b style="color:#9b59b6">gestor</b> = switch(tipo) → Bitrix24 userID &nbsp;·&nbsp;
+        <b style="color:#9b59b6">centro_revisar</b> = switch(tipo) → ID centro &nbsp;·&nbsp;
+        <b style="color:#9b59b6">tipo_visita</b> = switch(tipo) → ID tipo &nbsp;·&nbsp;
+        <b style="color:#9b59b6">centro_form</b> = switch(tipo) → ID formulario &nbsp;·&nbsp;
+        <b style="color:#9b59b6">notes</b> = trim(replace(notas; newline; " "))
+      </div>
     </div>
 
-    <div class="arr-d"><div class="arr-down">↓</div></div>
-
-    <!-- Filtro canceled -->
-    <div class="cond-box">
-      <span class="cop">🔶 FILTRO</span>
-      <strong>canceled == "false"</strong>
-      <div style="color:#555;margin-top:3px;font-size:.85em">Si canceled=true → ignorar</div>
-    </div>
-
-    <div class="arr-d"><div class="arr-down">↓</div><div class="arr-label">canceled=false</div></div>
-
-    <!-- SetVariables -->
-    <div class="node n-set" style="max-width:100%;width:100%">
-      <div class="nlabel">util:SetVariables</div>
-      <div class="nval">Calcular variables del blueprint</div>
-    </div>
-
+    <!-- Switch tables inline -->
     <div class="sw-box">
-      <div class="sw-title">switch() — Gestor según centro (assignedById)</div>
+      <div class="sw-hdr">switch(tipo) — Gestor / Centro a Revisar / Centro Formulario</div>
       <div class="sw-grid">
-        <div class="sw-row"><span class="sw-k">Centro Sevilla</span><span class="sw-v">→ 76</span></div>
-        <div class="sw-row"><span class="sw-k">Centro Valladolid</span><span class="sw-v">→ 29885</span></div>
-        <div class="sw-row"><span class="sw-k">Resto de centros</span><span class="sw-v">→ 22435 (default)</span></div>
-      </div>
-      <div class="sw-title" style="margin-top:8px">switch() — Centro a Revisar (ufCrm_1608117297)</div>
-      <div class="sw-grid">
-        <div class="sw-row"><span class="sw-k">S.S. de los Reyes</span><span class="sw-v">24395</span></div>
-        <div class="sw-row"><span class="sw-k">Sevilla</span><span class="sw-v">24399</span></div>
-        <div class="sw-row"><span class="sw-k">Fuencarral</span><span class="sw-v">24387</span></div>
-        <div class="sw-row"><span class="sw-k">Chamartín</span><span class="sw-v">24385</span></div>
-        <div class="sw-row"><span class="sw-k">San Blas</span><span class="sw-v">24397</span></div>
-        <div class="sw-row"><span class="sw-k">Barajas</span><span class="sw-v">24383</span></div>
-        <div class="sw-row"><span class="sw-k">Móstoles</span><span class="sw-v">24393</span></div>
-        <div class="sw-row"><span class="sw-k">Leganés S.J.V.</span><span class="sw-v">24391</span></div>
-        <div class="sw-row"><span class="sw-k">Leganés Butarque</span><span class="sw-v">24389</span></div>
-        <div class="sw-row"><span class="sw-k">Alcorcón</span><span class="sw-v">24381</span></div>
-        <div class="sw-row"><span class="sw-k">Valladolid</span><span class="sw-v">30116</span></div>
-        <div class="sw-row"><span class="sw-k">Hortaleza</span><span class="sw-v">31444</span></div>
-        <div class="sw-row"><span class="sw-k">Villaverde</span><span class="sw-v">31660</span></div>
-        <div class="sw-row"><span class="sw-k">default</span><span class="sw-v">24379</span></div>
-      </div>
-      <div class="sw-title" style="margin-top:8px">switch() — Tipo Visita (ufCrm31_1718778466198) &nbsp;·&nbsp; Centro Formulario (ufCrm_1593078333)</div>
-      <div style="color:#555;font-size:.88em">Tipo Visita: comercial→31480, primera visita→31482, virtual comercial→31484, porte→31488 (default: 31480)</div>
-      <div style="color:#555;font-size:.88em;margin-top:3px">fecha_iso = addHours(datetime; −1) formateado ISO 8601</div>
-    </div>
-
-    <div class="arr-d"><div class="arr-down">↓</div></div>
-
-    <!-- searchContacts by EMAIL -->
-    <div class="node n-bitrix-r"><div class="nlabel">Bitrix24</div><div class="nval">searchContacts by EMAIL</div></div>
-
-    <div class="arr-d"><div class="arr-down">↓</div></div>
-
-    <!-- BasicRouter -->
-    <div class="cond-box">
-      <span class="cop">🔀 BasicRouter</span>
-      <strong>¿contact.ID existe?</strong>
-    </div>
-
-    <!-- Dos ramas -->
-    <div style="display:flex;gap:24px;margin-top:8px;width:100%;flex-wrap:wrap">
-
-      <!-- RAMA 1: Cliente Existe -->
-      <div style="flex:1;min-width:280px">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
-          <span class="branch-tag tag-yes">✅ Cliente Existe (email)</span>
-          <span style="font-size:.7em;color:#555">contact.ID existe</span>
-        </div>
-        <div class="node n-bitrix-r" style="margin-bottom:8px"><div class="nlabel">Bitrix24</div><div class="nval">searchDeals by CONTACT_ID</div></div>
-
-        <div class="cond-box" style="margin-bottom:8px">
-          <span class="cop">🔀 BasicRouter anidado</span>
-          <strong>deals.count > 0</strong>
-        </div>
-
-        <div style="display:flex;gap:12px;flex-wrap:wrap">
-          <div style="flex:1;min-width:160px">
-            <span class="branch-tag tag-yes" style="display:inline-block;margin-bottom:6px">✅ Existe Deal</span>
-            <div class="node n-bitrix" style="font-size:.72em"><div class="nlabel">crm.item.add</div><div class="nval">+ deal URL</div></div>
-          </div>
-          <div style="flex:1;min-width:160px">
-            <span class="branch-tag tag-no" style="display:inline-block;margin-bottom:6px">❌ Sin Deal</span>
-            <div class="node n-bitrix" style="font-size:.72em"><div class="nlabel">crm.item.add</div><div class="nval">sin deal URL</div></div>
-          </div>
-        </div>
-
-        <div class="cond-box" style="margin-top:8px">
-          <span class="cop">FILTRO tras add</span>
-          <strong>notes != ""</strong>
-          → crm.item.update notes
-        </div>
-      </div>
-
-      <!-- RAMA 2: Cliente No Existe -->
-      <div style="flex:1;min-width:280px">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
-          <span class="branch-tag tag-no">❌ Cliente No Existe (email)</span>
-          <span style="font-size:.7em;color:#555">contact.ID no existe</span>
-        </div>
-        <div class="node n-bitrix-r" style="margin-bottom:8px"><div class="nlabel">Bitrix24</div><div class="nval">searchContacts by PHONE</div></div>
-
-        <div class="cond-box" style="margin-bottom:8px">
-          <span class="cop">FILTRO implícito</span>
-          <strong>¿contact existe por teléfono?</strong>
-        </div>
-
-        <div style="display:flex;gap:12px;flex-wrap:wrap">
-          <div style="flex:1;min-width:140px">
-            <span class="branch-tag tag-yes" style="display:inline-block;margin-bottom:6px">✅ Existe</span>
-            <div class="node n-bitrix" style="font-size:.72em"><div class="nlabel">Usar contacto</div><div class="nval">existente</div></div>
-          </div>
-          <div style="flex:1;min-width:140px">
-            <span class="branch-tag tag-no" style="display:inline-block;margin-bottom:6px">❌ No existe</span>
-            <div class="node n-bitrix" style="font-size:.72em"><div class="nlabel">crm.contact.add</div><div class="nval">Crear contacto</div></div>
-          </div>
-        </div>
-
-        <div class="node n-bitrix" style="margin-top:8px;font-size:.72em"><div class="nlabel">crm.item.add</div><div class="nval">SPA 182 · Stage: NEW</div></div>
-        <div class="cond-box" style="margin-top:8px">
-          <span class="cop">FILTRO tras add</span>
-          <strong>notes != ""</strong>
-          → crm.item.update notes
-        </div>
-      </div>
-
-    </div><!-- fin ramas -->
-
-    <!-- Campos del crm.item.add -->
-    <div class="fields">
-      <div class="ftitle">Campos crm.item.add (todos los caminos)</div>
-      <div class="fg">
-        <div class="fr"><span class="fk">stageId</span><span class="fs">→</span><span class="fv">DT182_55:NEW</span></div>
-        <div class="fr"><span class="fk">title</span><span class="fs">→</span><span class="fv">Visita {nombre} - {tipo} - {fecha}</span></div>
-        <div class="fr"><span class="fk">contactId</span><span class="fs">→</span><span class="fv">ID contacto</span></div>
-        <div class="fr"><span class="fk">assignedById</span><span class="fs">→</span><span class="fv">switch(centro) gestor</span></div>
-        <div class="fr"><span class="fk">ufCrm31_1745787119410</span><span class="fs">→</span><span class="fv">appointment.id (Acuity)</span></div>
-        <div class="fr"><span class="fk">ufCrm_1590739351</span><span class="fs">→</span><span class="fv">fecha_iso (−1h)</span></div>
-        <div class="fr"><span class="fk">ufCrm31_1664208311266</span><span class="fs">→</span><span class="fv">fecha_iso (−1h)</span></div>
-        <div class="fr"><span class="fk">ufCrm_1608117297</span><span class="fs">→</span><span class="fv">switch(centro) revisar</span></div>
-        <div class="fr"><span class="fk">ufCrm_1593078333</span><span class="fs">→</span><span class="fv">switch(centro) formulario</span></div>
-        <div class="fr"><span class="fk">ufCrm31_1718778466198</span><span class="fs">→</span><span class="fv">switch(tipo) visita_id</span></div>
-        <div class="fr"><span class="fk">ufCrm31_1716221104870</span><span class="fs">→</span><span class="fv">"31446" (fijo)</span></div>
-        <div class="fr"><span class="fk">ufCrm31_1757428103201</span><span class="fs">→</span><span class="fv">URL deal (si existe deal)</span></div>
-        <div class="fr"><span class="fk">ufCrm_1590742406</span><span class="fs">→</span><span class="fv">notes (update separado)</span></div>
+        <div class="sw-r"><span class="sw-k">S.S. de los Reyes</span><span class="sw-v">gestor:22435 · rev:24395 · form:24591</span></div>
+        <div class="sw-r"><span class="sw-k">Alcobendas</span><span class="sw-v">gestor:22435 · rev:— · form:—</span></div>
+        <div class="sw-r"><span class="sw-k">Fuencarral</span><span class="sw-v">gestor:22435 · rev:24387 · form:24581</span></div>
+        <div class="sw-r"><span class="sw-k">Chamartín</span><span class="sw-v">gestor:22435 · rev:24385 · form:24579</span></div>
+        <div class="sw-r"><span class="sw-k">San Blas</span><span class="sw-v">gestor:22435 · rev:24397 · form:24593</span></div>
+        <div class="sw-r"><span class="sw-k">Barajas</span><span class="sw-v">gestor:22435 · rev:24383 · form:24577</span></div>
+        <div class="sw-r"><span class="sw-k">Móstoles</span><span class="sw-v">gestor:22435 · rev:24393 · form:24587</span></div>
+        <div class="sw-r"><span class="sw-k">Leganés S.J.V.</span><span class="sw-v">gestor:22435 · rev:24391 · form:24585</span></div>
+        <div class="sw-r"><span class="sw-k">Leganés Butarque</span><span class="sw-v">gestor:22435 · rev:24389 · form:24583</span></div>
+        <div class="sw-r"><span class="sw-k">Alcorcón</span><span class="sw-v">gestor:22435 · rev:24381 · form:24575</span></div>
+        <div class="sw-r"><span class="sw-k">Valladolid</span><span class="sw-v">gestor:29885 · rev:30116 · form:24597</span></div>
+        <div class="sw-r"><span class="sw-k">Hortaleza</span><span class="sw-v">gestor:22435 · rev:31444 · form:31442</span></div>
+        <div class="sw-r"><span class="sw-k">Villaverde</span><span class="sw-v">gestor:22435 · rev:31660 · form:31662</span></div>
+        <div class="sw-r"><span class="sw-k">Sevilla</span><span class="sw-v">gestor:<b style="color:#f39c12">76</b> · rev:24399 · form:24595</span></div>
+        <div class="sw-r"><span class="sw-k">default</span><span class="sw-v">gestor:22435 · rev:24379 · form:24573</span></div>
       </div>
     </div>
 
-  </div>
-</div>
+    <div class="vc"><div class="vc-line"></div><div class="vc-arrow"></div></div>
+
+    <!-- SEARCH BY EMAIL -->
+    <div class="node n-read">
+      <div class="n-type">🔍 Bitrix24</div>
+      <div class="n-title">crm.contact.list</div>
+      <div class="n-sub">filter: EMAIL = appointment.email</div>
+    </div>
+    <div class="vc"><div class="vc-line"></div><div class="vc-arrow"></div></div>
+
+    <!-- CONDICIÓN: contact existe? → SPLIT -->
+    <div class="d-wrap" style="margin:0 auto">
+      <div class="d-shape"></div>
+      <div class="d-text">¿contact.ID<br>existe?</div>
+    </div>
+
+    <!-- SPLIT: SÍ email / NO email -->
+    <div class="split" style="max-width:860px;width:100%">
+
+      <!-- RAMA SÍ: Cliente existe por email -->
+      <div class="split-col yes-col">
+        <div class="split-label">✓ SÍ — Cliente existe (email)</div>
+
+        <div class="node n-read">
+          <div class="n-type">🔍 Bitrix24</div>
+          <div class="n-title">crm.deal.list</div>
+          <div class="n-sub">filter: CONTACT_ID = contact.ID</div>
+        </div>
+        <div class="vc"><div class="vc-line"></div><div class="vc-arrow"></div></div>
+
+        <!-- Sub-condición: deal > 0? -->
+        <div class="d-wrap"><div class="d-shape"></div><div class="d-text">deals.count<br>&gt; 0?</div></div>
+
+        <div class="subsplit" style="width:100%">
+          <div class="subsplit-col sub-yes">
+            <div class="subsplit-label">✓ SÍ<br>Existe Deal</div>
+            <div class="node n-write" style="min-width:130px">
+              <div class="n-type">✏️ Bitrix24</div>
+              <div class="n-title">crm.item.add</div>
+              <div class="n-sub">con deal URL</div>
+            </div>
+          </div>
+          <div class="subsplit-sep"></div>
+          <div class="subsplit-col sub-no">
+            <div class="subsplit-label">✗ NO<br>Sin Deal</div>
+            <div class="node n-write" style="min-width:130px">
+              <div class="n-type">✏️ Bitrix24</div>
+              <div class="n-title">crm.item.add</div>
+              <div class="n-sub">sin deal URL</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /rama SÍ email -->
+
+      <div class="split-sep"></div>
+
+      <!-- RAMA NO: Cliente no existe por email -->
+      <div class="split-col no-col">
+        <div class="split-label">✗ NO — Cliente no existe (email)</div>
+
+        <div class="node n-read">
+          <div class="n-type">🔍 Bitrix24</div>
+          <div class="n-title">crm.contact.list</div>
+          <div class="n-sub">filter: PHONE = appointment.phone</div>
+        </div>
+        <div class="vc"><div class="vc-line"></div><div class="vc-arrow"></div></div>
+
+        <!-- Sub-condición: tel existe? -->
+        <div class="d-wrap"><div class="d-shape"></div><div class="d-text">¿contact<br>por tel?</div></div>
+
+        <div class="subsplit" style="width:100%">
+          <div class="subsplit-col sub-yes">
+            <div class="subsplit-label">✓ SÍ<br>Existe</div>
+            <div class="node n-read" style="min-width:120px">
+              <div class="n-type">👤 Contacto</div>
+              <div class="n-title">Usar existente</div>
+            </div>
+          </div>
+          <div class="subsplit-sep"></div>
+          <div class="subsplit-col sub-no">
+            <div class="subsplit-label">✗ NO<br>No existe</div>
+            <div class="node n-write" style="min-width:120px">
+              <div class="n-type">➕ Bitrix24</div>
+              <div class="n-title">crm.contact.add</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="vc"><div class="vc-line"></div><div class="vc-arrow"></div></div>
+        <div class="node n-write">
+          <div class="n-type">✏️ Bitrix24</div>
+          <div class="n-title">crm.item.add</div>
+          <div class="n-sub">Stage: NEW · SPA 182</div>
+        </div>
+
+      </div><!-- /rama NO email -->
+
+    </div><!-- /split email -->
+
+    <!-- MERGE -->
+    <div class="merge">
+      <div class="merge-bar" style="width:75%"></div>
+      <div class="vc"><div class="vc-line" style="height:14px"></div><div class="vc-arrow"></div></div>
+    </div>
+
+    <!-- Campos del item.add -->
+    <div class="fields-box" style="max-width:680px">
+      <div class="fields-hdr">Campos comunes crm.item.add (todas las rutas)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 16px">
+        <div class="field-r"><span class="field-k">stageId</span><span class="field-v">→ DT182_55:NEW</span></div>
+        <div class="field-r"><span class="field-k">ufCrm31_1745787119410</span><span class="field-v">→ appointment.id</span></div>
+        <div class="field-r"><span class="field-k">title</span><span class="field-v">→ "Visita {nombre} - {tipo} - {fecha}"</span></div>
+        <div class="field-r"><span class="field-k">ufCrm_1590739351</span><span class="field-v">→ fecha_iso (−1h)</span></div>
+        <div class="field-r"><span class="field-k">assignedById</span><span class="field-v">→ switch(centro) gestor</span></div>
+        <div class="field-r"><span class="field-k">ufCrm_1608117297</span><span class="field-v">→ switch(centro) revisar</span></div>
+        <div class="field-r"><span class="field-k">contactId</span><span class="field-v">→ ID del contacto</span></div>
+        <div class="field-r"><span class="field-k">ufCrm_1593078333</span><span class="field-v">→ switch(centro) formulario</span></div>
+        <div class="field-r"><span class="field-k">ufCrm31_1757428103201</span><span class="field-v">→ URL deal (si existe)</span></div>
+        <div class="field-r"><span class="field-k">ufCrm31_1716221104870</span><span class="field-v">→ "31446" (fijo)</span></div>
+      </div>
+    </div>
+    <div class="vc"><div class="vc-line"></div><div class="vc-arrow"></div></div>
+
+    <!-- CONDICIÓN: notes != "" -->
+    <div class="cond-row">
+      <div class="cond-main">
+        <div class="d-wrap"><div class="d-shape"></div><div class="d-text">notes<br>!= ""?</div></div>
+      </div>
+      <div class="cond-no-branch">
+        <span class="no-arrow">NO ──▶</span>
+        <div class="node n-skip" style="min-width:120px">
+          <div class="n-type">FIN</div>
+          <div class="n-title">Sin notas</div>
+        </div>
+      </div>
+    </div>
+    <div class="yes-arrow"><div class="yes-label">↓ SÍ (hay notas)</div></div>
+
+    <!-- UPDATE NOTES -->
+    <div class="node n-write">
+      <div class="n-type">✏️ Bitrix24</div>
+      <div class="n-title">crm.item.update</div>
+      <div class="n-sub">ufCrm_1590742406 = notes</div>
+    </div>
+
+  </div><!-- /flow -->
+  </div><!-- /bp-body -->
+</div><!-- /bp-1 -->
 
 
-<!-- ══════════════════════════════════════════════════════════════
+<!-- ═══════════════════════════════════════════════════════
      BLUEPRINT 02 — VISITA MODIFICADA
-══════════════════════════════════════════════════════════════ -->
+════════════════════════════════════════════════════════ -->
 <div class="bp bp-2">
-  <div class="bp-header">
+  <div class="bp-hdr">
     <span class="bp-num">02</span>
     <span class="bp-title">Visita Modificada</span>
-    <span class="bp-trigger">appointment.rescheduled</span>
+    <span class="bp-action">appointment.rescheduled</span>
   </div>
-
+  <div class="bp-body">
   <div class="flow">
 
-    <div class="row" style="flex-wrap:wrap;gap:8px">
-      <div class="node n-trigger"><div class="nlabel">Trigger Acuity</div><div class="nval">watchAppointments</div></div>
-      <div class="arr">→</div>
-      <div class="cond-box" style="margin-top:0">
-        <span class="cop">🔶 FILTRO trigger</span>
-        action <strong>contains "changed"</strong><br>
-        AND NOT contains "canceled"
+    <div class="node n-trigger">
+      <div class="n-type">⚡ Trigger Acuity</div>
+      <div class="n-title">watchAppointments</div>
+      <div class="n-sub">cualquier evento de cita</div>
+    </div>
+    <div class="vc"><div class="vc-line"></div><div class="vc-arrow"></div></div>
+
+    <!-- FILTRO trigger: action contains "changed" AND NOT "canceled" -->
+    <div class="cond-row">
+      <div class="cond-main">
+        <div class="d-wrap"><div class="d-shape"></div><div class="d-text">action contains<br>"changed" &amp;&amp;<br>NOT "canceled"?</div></div>
       </div>
-      <div class="arr">→</div>
-      <div class="node n-api"><div class="nlabel">Acuity API</div><div class="nval">getAppointment</div></div>
-    </div>
-
-    <div class="arr-d"><div class="arr-down">↓</div></div>
-
-    <div class="cond-box">
-      <span class="cop">🔶 FILTRO</span>
-      <strong>canceled == "false"</strong>
-    </div>
-
-    <div class="arr-d"><div class="arr-down">↓</div><div class="arr-label">canceled=false</div></div>
-
-    <div class="node n-set">
-      <div class="nlabel">util:SetVariable2</div>
-      <div class="nval">fecha_iso = addHours(datetime; −1)</div>
-    </div>
-
-    <div class="arr-d"><div class="arr-down">↓</div></div>
-
-    <div class="node n-sleep">
-      <div class="nlabel">⏳ FunctionSleep</div>
-      <div class="nval">240 segundos</div>
-      <div style="color:#555;font-size:.7em;margin-top:3px">Evita race condition</div>
-    </div>
-
-    <div class="arr-d"><div class="arr-down">↓</div></div>
-
-    <div class="node n-bitrix-r"><div class="nlabel">Bitrix24</div><div class="nval">crm.item.list</div><div style="color:#555;font-size:.7em;margin-top:3px">filter: ufCrm31_1745787119410 = id</div></div>
-
-    <div class="arr-d"><div class="arr-down">↓</div></div>
-
-    <div class="cond-box">
-      <span class="cop">🔶 FILTRO</span>
-      <strong>total &gt; 0</strong>
-      <div style="color:#555;font-size:.85em;margin-top:2px">Visita encontrada en Bitrix24</div>
-    </div>
-
-    <div class="arr-d"><div class="arr-down">↓</div><div class="arr-label">encontrada</div></div>
-
-    <div class="node n-set">
-      <div class="nlabel">util:SetVariables</div>
-      <div class="nval">visita_ant = formatDate(ufCrm_1590739351; DD.MM.YYYY HH:mm; UTC)</div>
-      <div class="nval" style="margin-top:3px">visita_nueva = formatDate(fecha_iso; DD.MM.YYYY HH:mm; UTC)</div>
-    </div>
-
-    <div class="arr-d"><div class="arr-down">↓</div></div>
-
-    <div class="cond-box">
-      <span class="cop">🔶 FILTRO doble</span>
-      <strong>visita_ant != visita_nueva</strong>
-      <br>AND title NOT contains <strong>"PRUEBA_MAKE"</strong>
-    </div>
-
-    <div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap">
-      <div>
-        <span class="branch-tag tag-yes" style="display:inline-block;margin-bottom:6px">✅ Fecha cambió</span>
-        <div class="node n-warn"><div class="nlabel">crm.item.update</div><div class="nval">stageId: NEW · nuevo título · nuevas fechas</div></div>
-        <div class="fields" style="margin-top:8px">
-          <div class="fg">
-            <div class="fr"><span class="fk">stageId</span><span class="fs">→</span><span class="fv">DT182_55:NEW</span></div>
-            <div class="fr"><span class="fk">title</span><span class="fs">→</span><span class="fv">Actualizada: Visita {nombre}…</span></div>
-            <div class="fr"><span class="fk">ufCrm_1590739351</span><span class="fs">→</span><span class="fv">fecha_iso (−1h)</span></div>
-            <div class="fr"><span class="fk">ufCrm31_1664208311266</span><span class="fs">→</span><span class="fv">fecha_iso (−1h)</span></div>
-          </div>
+      <div class="cond-no-branch">
+        <span class="no-arrow">NO ──▶</span>
+        <div class="node n-skip" style="min-width:130px">
+          <div class="n-type">⛔ STOP</div>
+          <div class="n-title">No es modificación</div>
         </div>
       </div>
-      <div>
-        <span class="branch-tag tag-no" style="display:inline-block;margin-bottom:6px">❌ Sin cambio / PRUEBA_MAKE</span>
-        <div class="node n-skip"><div class="nlabel">skip</div><div class="nval">No actualizar</div></div>
+    </div>
+    <div class="yes-arrow"><div class="yes-label">↓ SÍ</div></div>
+
+    <div class="node n-api">
+      <div class="n-type">🔌 Acuity API</div>
+      <div class="n-title">getAppointment(id)</div>
+      <div class="n-sub">GET /api/v1/appointments/{id}</div>
+    </div>
+    <div class="vc"><div class="vc-line"></div><div class="vc-arrow"></div></div>
+
+    <!-- FILTRO: canceled == false -->
+    <div class="cond-row">
+      <div class="cond-main">
+        <div class="d-wrap"><div class="d-shape"></div><div class="d-text">canceled<br>== "false"?</div></div>
+      </div>
+      <div class="cond-no-branch">
+        <span class="no-arrow">NO ──▶</span>
+        <div class="node n-skip" style="min-width:130px">
+          <div class="n-type">⛔ STOP</div>
+          <div class="n-title">Cita cancelada</div>
+          <div class="n-sub">ignorar modificación</div>
+        </div>
       </div>
     </div>
+    <div class="yes-arrow"><div class="yes-label">↓ SÍ (canceled=false)</div></div>
 
+    <!-- SET VARIABLE -->
+    <div class="node n-vars">
+      <div class="n-type">📐 util:SetVariable2</div>
+      <div class="n-title">Calcular fecha_iso</div>
+      <div class="n-sub">fecha_iso = addHours(datetime; −1) → ISO 8601</div>
+    </div>
+    <div class="vc"><div class="vc-line"></div><div class="vc-arrow"></div></div>
+
+    <!-- SLEEP -->
+    <div class="node n-sleep">
+      <div class="n-type">⏳ util:FunctionSleep</div>
+      <div class="n-title">240 segundos</div>
+      <div class="n-sub">espera para evitar race condition</div>
+    </div>
+    <div class="vc"><div class="vc-line"></div><div class="vc-arrow"></div></div>
+
+    <!-- CRM.ITEM.LIST -->
+    <div class="node n-read">
+      <div class="n-type">🔍 Bitrix24</div>
+      <div class="n-title">crm.item.list</div>
+      <div class="n-sub">filter: ufCrm31_1745787119410 = appointment.id</div>
+    </div>
+    <div class="vc"><div class="vc-line"></div><div class="vc-arrow"></div></div>
+
+    <!-- FILTRO: total > 0 -->
+    <div class="cond-row">
+      <div class="cond-main">
+        <div class="d-wrap"><div class="d-shape"></div><div class="d-text">total<br>&gt; 0?</div></div>
+      </div>
+      <div class="cond-no-branch">
+        <span class="no-arrow">NO ──▶</span>
+        <div class="node n-skip" style="min-width:150px">
+          <div class="n-type">⛔ STOP</div>
+          <div class="n-title">Visita no encontrada</div>
+          <div class="n-sub">warning en log</div>
+        </div>
+      </div>
+    </div>
+    <div class="yes-arrow"><div class="yes-label">↓ SÍ (visita encontrada)</div></div>
+
+    <!-- SET VARIABLES: visita_ant y visita_nueva -->
+    <div class="node n-vars">
+      <div class="n-type">📐 util:SetVariables</div>
+      <div class="n-title">Comparar fechas</div>
+      <div class="n-sub">
+        visita_ant &nbsp;= formatDate(ufCrm_1590739351; DD.MM.YYYY HH:mm; UTC)<br>
+        visita_nueva = formatDate(fecha_iso; DD.MM.YYYY HH:mm; UTC)
+      </div>
+    </div>
+    <div class="vc"><div class="vc-line"></div><div class="vc-arrow"></div></div>
+
+    <!-- FILTRO DOBLE: ant != nueva AND NOT PRUEBA_MAKE -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:0;width:100%">
+      <div style="display:flex;flex-direction:column;align-items:center">
+        <div class="d-wrap" style="width:200px">
+          <div class="d-shape" style="width:100px;height:100px"></div>
+          <div class="d-text" style="max-width:130px">visita_ant ≠ visita_nueva<br><span style="color:#666;font-size:.9em">AND</span><br>title NOT "PRUEBA_MAKE"?</div>
+        </div>
+      </div>
+      <div class="cond-no-branch">
+        <span class="no-arrow">NO ──▶</span>
+        <div class="node n-skip" style="min-width:150px">
+          <div class="n-type">⛔ SKIP</div>
+          <div class="n-title">Sin cambio de fecha</div>
+          <div class="n-sub">o test PRUEBA_MAKE</div>
+        </div>
+      </div>
+    </div>
+    <div class="yes-arrow"><div class="yes-label">↓ SÍ (fecha cambió)</div></div>
+
+    <!-- CRM.ITEM.UPDATE -->
+    <div class="node n-write">
+      <div class="n-type">✏️ Bitrix24</div>
+      <div class="n-title">crm.item.update</div>
+    </div>
+    <div class="fields-box" style="max-width:420px">
+      <div class="fields-hdr">Campos actualizados</div>
+      <div class="field-r"><span class="field-k">stageId</span><span class="field-v">→ DT182_55:NEW</span></div>
+      <div class="field-r"><span class="field-k">title</span><span class="field-v">→ "Actualizada: Visita {nombre}…"</span></div>
+      <div class="field-r"><span class="field-k">ufCrm_1590739351</span><span class="field-v">→ fecha_iso (−1h)</span></div>
+      <div class="field-r"><span class="field-k">ufCrm31_1664208311266</span><span class="field-v">→ fecha_iso (−1h)</span></div>
+    </div>
+
+  </div>
   </div>
 </div>
 
 
-<!-- ══════════════════════════════════════════════════════════════
+<!-- ═══════════════════════════════════════════════════════
      BLUEPRINT 03 — VISITA CANCELADA
-══════════════════════════════════════════════════════════════ -->
+════════════════════════════════════════════════════════ -->
 <div class="bp bp-3">
-  <div class="bp-header">
+  <div class="bp-hdr">
     <span class="bp-num">03</span>
     <span class="bp-title">Visita Cancelada</span>
-    <span class="bp-trigger">appointment.canceled</span>
+    <span class="bp-action">appointment.canceled</span>
   </div>
-
+  <div class="bp-body">
   <div class="flow">
 
-    <div class="row" style="flex-wrap:wrap;gap:8px">
-      <div class="node n-trigger"><div class="nlabel">Trigger Acuity</div><div class="nval">watchAppointments</div></div>
-      <div class="arr">→</div>
-      <div class="node n-api"><div class="nlabel">Acuity API</div><div class="nval">getAppointment</div></div>
+    <div class="node n-trigger">
+      <div class="n-type">⚡ Trigger Acuity</div>
+      <div class="n-title">watchAppointments</div>
+      <div class="n-sub">cualquier evento de cita</div>
     </div>
+    <div class="vc"><div class="vc-line"></div><div class="vc-arrow"></div></div>
 
-    <div class="arr-d"><div class="arr-down">↓</div></div>
-
-    <div class="cond-box">
-      <span class="cop">🔶 FILTRO</span>
-      <strong>canceled == "true"</strong>
-      <div style="color:#555;font-size:.85em;margin-top:2px">Si canceled=false → ignorar</div>
+    <div class="node n-api">
+      <div class="n-type">🔌 Acuity API</div>
+      <div class="n-title">getAppointment(id)</div>
+      <div class="n-sub">GET /api/v1/appointments/{id}</div>
     </div>
+    <div class="vc"><div class="vc-line"></div><div class="vc-arrow"></div></div>
 
-    <div class="arr-d"><div class="arr-down">↓</div><div class="arr-label">canceled=true</div></div>
-
-    <div class="node n-bitrix-r"><div class="nlabel">Bitrix24</div><div class="nval">crm.item.list</div><div style="color:#555;font-size:.7em;margin-top:3px">filter: ufCrm31_1745787119410 = id</div></div>
-
-    <div class="arr-d"><div class="arr-down">↓</div></div>
-
-    <div class="cond-box">
-      <span class="cop">🔶 FILTRO doble</span>
-      <strong>stageId != "DT182_55:FAIL"</strong>
-      <br>AND total <strong>!= 0</strong>
-    </div>
-
-    <div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap">
-      <div>
-        <span class="branch-tag tag-yes" style="display:inline-block;margin-bottom:6px">✅ Visita activa encontrada</span>
-        <div class="node n-fail"><div class="nlabel">crm.item.update</div><div class="nval">stageId → DT182_55:FAIL</div></div>
+    <!-- FILTRO: canceled == true -->
+    <div class="cond-row">
+      <div class="cond-main">
+        <div class="d-wrap"><div class="d-shape"></div><div class="d-text">canceled<br>== "true"?</div></div>
       </div>
-      <div>
-        <span class="branch-tag tag-no" style="display:inline-block;margin-bottom:6px">❌ Ya FAIL / no encontrada</span>
-        <div class="node n-skip"><div class="nlabel">skip</div><div class="nval">Sin cambios</div></div>
+      <div class="cond-no-branch">
+        <span class="no-arrow">NO ──▶</span>
+        <div class="node n-skip" style="min-width:140px">
+          <div class="n-type">⛔ STOP</div>
+          <div class="n-title">No cancelada</div>
+          <div class="n-sub">ignorar evento</div>
+        </div>
       </div>
+    </div>
+    <div class="yes-arrow"><div class="yes-label">↓ SÍ (canceled=true)</div></div>
+
+    <div class="node n-read">
+      <div class="n-type">🔍 Bitrix24</div>
+      <div class="n-title">crm.item.list</div>
+      <div class="n-sub">filter: ufCrm31_1745787119410 = appointment.id</div>
+    </div>
+    <div class="vc"><div class="vc-line"></div><div class="vc-arrow"></div></div>
+
+    <!-- FILTRO DOBLE: stageId != FAIL AND total != 0 -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:0;width:100%">
+      <div style="display:flex;flex-direction:column;align-items:center">
+        <div class="d-wrap" style="width:190px">
+          <div class="d-shape" style="width:96px;height:96px"></div>
+          <div class="d-text" style="max-width:125px">stageId ≠ "FAIL"<br><span style="color:#666;font-size:.9em">AND</span><br>total ≠ 0?</div>
+        </div>
+      </div>
+      <div class="cond-no-branch">
+        <span class="no-arrow">NO ──▶</span>
+        <div class="node n-skip" style="min-width:155px">
+          <div class="n-type">⛔ SKIP</div>
+          <div class="n-title">Ya en FAIL</div>
+          <div class="n-sub">o visita no encontrada</div>
+        </div>
+      </div>
+    </div>
+    <div class="yes-arrow"><div class="yes-label">↓ SÍ (visita activa encontrada)</div></div>
+
+    <!-- CRM.ITEM.UPDATE FAIL -->
+    <div class="node n-fail">
+      <div class="n-type">✏️ Bitrix24</div>
+      <div class="n-title">crm.item.update</div>
+      <div class="n-sub">stageId → DT182_55:FAIL</div>
     </div>
 
   </div>
-</div>
-
-
-<!-- Endpoints -->
-<div style="background:#13132a;border:1px solid #2a2a4a;border-radius:14px;padding:20px 24px">
-  <div style="color:#555;font-size:.76em;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Endpoints FastAPI</div>
-  <div class="ep-grid">
-    <div class="ep"><span class="post method">POST</span><span class="path">/acuity</span><div class="desc">Webhook Acuity. Verifica firma HMAC → despacha por action al handler.</div></div>
-    <div class="ep"><span class="get method">GET</span><span class="path">/monitor</span><div class="desc">Panel de logs en tiempo real. Auto-refresco 5 s.</div></div>
-    <div class="ep"><span class="post method">POST</span><span class="path">/deploy?token=XXX</span><div class="desc">git pull + reinicio systemd (fastapi-scheduling-visitas).</div></div>
-    <div class="ep"><span class="get method">GET</span><span class="path">/</span><div class="desc">Status check. Lista actions disponibles.</div></div>
   </div>
 </div>
 
-<div style="text-align:center;color:#2a2a4a;font-size:.72em;margin-top:16px">
+<div style="text-align:center;color:#1a1a35;font-size:.72em;margin-top:8px">
   FastAPI · Puerto 8006 · 192.168.2.197 · /opt/fastapi-scheduling-visitas · github.com/sistemastt00/fastapi-scheduling-visitas
 </div>
 
