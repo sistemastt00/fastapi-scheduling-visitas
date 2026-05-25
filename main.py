@@ -170,6 +170,155 @@ async def monitor():
 
 # ─── Monitor HTML ─────────────────────────────────────────────────────────────
 
+def _build_flow_path(msgs_text: str, action: str) -> list:
+    """
+    Parsea los mensajes de log de una cita y devuelve una lista de pasos
+    del flujo que tomó: [{label, icon, color, dim}]
+    dim=True = paso no ejecutado / rama no tomada (gris).
+    """
+    m = msgs_text  # texto completo para búsquedas rápidas
+    steps = []
+
+    def step(icon, label, color="#3498db", dim=False):
+        steps.append({"icon": icon, "label": label, "color": color, "dim": dim})
+
+    if action == "creada":
+        step("⚡", "Webhook", "#3498db")
+        step("🔌", "getAppointment", "#666")
+
+        if "cita cancelada" in m.lower():
+            step("⛔", "canceled=true → skip", "#555", dim=True)
+            return steps
+
+        step("✓", "canceled=false", "#2ecc71")
+        step("📐", "SetVariables", "#9b59b6")
+
+        # Búsqueda por email
+        if "Contacto por email:" in m:
+            step("📧", "Email encontrado", "#2ecc71")
+            if "Deal encontrado:" in m:
+                step("💼", "Deal encontrado", "#2ecc71")
+            else:
+                step("💼", "Sin deal", "#e67e22")
+        else:
+            step("📧", "Sin contacto email", "#e74c3c")
+            if "Contacto por teléfono:" in m:
+                step("📱", "Tel. encontrado", "#2ecc71")
+                if "Deal encontrado (phone):" in m:
+                    step("💼", "Deal encontrado", "#2ecc71")
+                else:
+                    step("💼", "Sin deal", "#e67e22")
+            elif "Contacto creado:" in m:
+                step("👤", "Contacto creado", "#9b59b6")
+
+        if "Visita creada:" in m:
+            step("✅", "crm.item.add", "#2ecc71")
+        if "Notas actualizadas" in m:
+            step("📝", "Notas", "#3498db")
+
+    elif action == "modificada":
+        step("⚡", "Webhook", "#3498db")
+        step("🔌", "getAppointment", "#666")
+
+        if "cancelada — ignorando" in m:
+            step("⛔", "canceled=true → skip", "#555", dim=True)
+            return steps
+
+        step("✓", "canceled=false", "#2ecc71")
+        step("📐", "fecha_iso −1h", "#9b59b6")
+        step("⏳", "Sleep 60s", "#e67e22")
+        step("🔍", "crm.item.list", "#666")
+
+        if "no encontrada" in m.lower():
+            step("⚠️", "Visita no encontrada", "#e74c3c", dim=True)
+            return steps
+
+        if "Fecha sin cambios" in m:
+            step("⏸", "Fecha sin cambio → skip", "#555", dim=True)
+            return steps
+        if "PRUEBA_MAKE" in m:
+            step("🧪", "PRUEBA_MAKE → skip", "#555", dim=True)
+            return steps
+
+        step("🔀", "Fecha cambió", "#2ecc71")
+        step("✅", "crm.item.update", "#f39c12")
+
+    elif action == "cancelada":
+        step("⚡", "Webhook", "#3498db")
+        step("🔌", "getAppointment", "#666")
+
+        if "no está cancelada" in m:
+            step("⛔", "canceled=false → skip", "#555", dim=True)
+            return steps
+
+        step("✓", "canceled=true", "#e74c3c")
+        step("🔍", "crm.item.list", "#666")
+
+        if "no encontrada" in m.lower():
+            step("⚠️", "Visita no encontrada", "#e74c3c", dim=True)
+            return steps
+        if "ya estaba en FAIL" in m:
+            step("⏸", "Ya en FAIL → skip", "#555", dim=True)
+            return steps
+
+        step("❌", "→ FAIL", "#e74c3c")
+
+    return steps
+
+
+def _render_flow_path(steps: list) -> str:
+    if not steps:
+        return ""
+    pills = ""
+    for i, s in enumerate(steps):
+        opacity  = "0.35" if s.get("dim") else "1"
+        bg       = "#0d0d1e"
+        border   = s["color"] if not s.get("dim") else "#222"
+        color    = s["color"] if not s.get("dim") else "#444"
+        pills += (
+            f'<span style="display:inline-flex;align-items:center;gap:4px;'
+            f'background:{bg};border:1px solid {border};color:{color};'
+            f'padding:2px 9px;border-radius:12px;font-size:.7em;opacity:{opacity};white-space:nowrap">'
+            f'{s["icon"]} {s["label"]}</span>'
+        )
+        if i < len(steps) - 1:
+            pills += '<span style="color:#222;font-size:.75em;padding:0 1px">→</span>'
+    return (
+        f'<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;'
+        f'padding:7px 14px;background:#07070f;border-bottom:1px solid #111128">'
+        f'<span style="color:#333;font-size:.68em;margin-right:4px">FLUJO</span>'
+        f'{pills}</div>'
+    )
+
+
+# Palabras clave que marcan una línea de log como "decisión clave"
+_KEY_PATTERNS = [
+    ("Contacto por email:",       "#2ecc71"),
+    ("Contacto no encontrado",    "#e74c3c"),
+    ("Contacto por teléfono:",    "#2ecc71"),
+    ("Contacto creado:",          "#9b59b6"),
+    ("Deal encontrado:",          "#2ecc71"),
+    ("Sin deal",                  "#e67e22"),
+    ("Visita creada:",            "#2ecc71"),
+    ("Visita actualizada:",       "#f39c12"),
+    ("Visita marcada FAIL:",      "#e74c3c"),
+    ("Notas actualizadas",        "#3498db"),
+    ("Ignorado:",                 "#555"),
+    ("Ignorando",                 "#555"),
+    ("ya estaba en FAIL",         "#555"),
+    ("no encontrada",             "#e74c3c"),
+    ("Fecha sin cambios",         "#555"),
+    ("PRUEBA_MAKE",               "#555"),
+]
+
+def _key_color(msg: str) -> str | None:
+    ml = msg.lower()
+    for pattern, color in _KEY_PATTERNS:
+        if pattern.lower() in ml:
+            return color
+    return None
+
+
 def _render_monitor() -> str:
     all_history = list(_history)  # snapshot, más reciente primero
 
@@ -185,16 +334,31 @@ def _render_monitor() -> str:
         appt_id = s["appointment_id"]
 
         # Logs relacionados con esta cita (orden cronológico)
-        related = [e for e in reversed(all_history) if appt_id in e["message"]]
+        related  = [e for e in reversed(all_history) if appt_id in e["message"]]
+        msgs_txt = " | ".join(e["message"] for e in related)
+
+        # Breadcrumb de flujo
+        path_steps = _build_flow_path(msgs_txt, s["action"])
+        flow_bar   = _render_flow_path(path_steps)
+
+        # Filas de log con resaltado de líneas clave
         log_rows = ""
         for entry in related:
-            lc  = {"ERROR": "#e74c3c", "WARNING": "#f39c12", "INFO": "#3498db"}.get(entry["level"], "#aaa")
-            msg = entry["message"].replace("<", "&lt;").replace(">", "&gt;")
+            lc       = {"ERROR": "#e74c3c", "WARNING": "#f39c12", "INFO": "#3498db"}.get(entry["level"], "#aaa")
+            msg      = entry["message"].replace("<", "&lt;").replace(">", "&gt;")
+            kc       = _key_color(entry["message"])
+            row_bg   = "#0d0d1f"
+            left_bar = ""
+            key_style = ""
+            if kc:
+                row_bg   = "#0a0a18"
+                left_bar = f'border-left:3px solid {kc};'
+                key_style = f'color:{kc};font-weight:600;'
             log_rows += (
-                f'<tr>'
+                f'<tr style="background:{row_bg};{left_bar}">'
                 f'<td style="color:#888;white-space:nowrap;padding:3px 10px;font-size:.75em">{entry["time"]}</td>'
                 f'<td style="color:{lc};padding:3px 6px;font-size:.75em;font-weight:600">{entry["level"]}</td>'
-                f'<td style="padding:3px 10px;font-size:.78em;color:#ccc;word-break:break-word">{msg}</td>'
+                f'<td style="padding:3px 10px;font-size:.78em;{key_style}color:#ccc;word-break:break-word">{msg}</td>'
                 f'</tr>'
             )
         if not log_rows:
@@ -211,6 +375,7 @@ def _render_monitor() -> str:
         </tr>
         <tr class="sm-detail" id="det-{i}" style="display:none">
           <td colspan="6" style="padding:0;background:#0d0d1f">
+            {flow_bar}
             <table style="width:100%;border-collapse:collapse;background:transparent;border:none;border-radius:0;margin:0">
               <tr style="background:#111127">
                 <td style="padding:5px 14px;font-size:.75em;color:#555">Bitrix24:</td>
