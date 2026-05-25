@@ -9,6 +9,7 @@ Arquitectura:
 """
 import asyncio
 import collections
+import contextvars
 import datetime
 import json
 import logging
@@ -37,6 +38,9 @@ logger = logging.getLogger("scheduling-visitas")
 MAX_HISTORY = 100
 _history: collections.deque = collections.deque(maxlen=MAX_HISTORY)
 
+# ContextVar: appointment_id activo durante la ejecución de un handler
+_current_appt_id: contextvars.ContextVar[str] = contextvars.ContextVar("appt_id", default="")
+
 
 class _MonitorHandler(logging.Handler):
     def emit(self, record):
@@ -44,6 +48,7 @@ class _MonitorHandler(logging.Handler):
             "time":    datetime.datetime.fromtimestamp(record.created).strftime("%d/%m %H:%M:%S"),
             "level":   record.levelname,
             "message": self.format(record),
+            "appt_id": _current_appt_id.get(""),   # ← etiqueta automática
         })
 
 
@@ -125,6 +130,8 @@ async def acuity_webhook(request: Request, background_tasks: BackgroundTasks):
 
 
 async def _run_handler(handler, payload: dict, action: str):
+    # Inyectar appointment_id en el contexto para que todos los logs queden etiquetados
+    token = _current_appt_id.set(str(payload.get("id", "")))
     try:
         result = await handler(payload)
         logger.info(f"[{action}] OK → {json.dumps(result, ensure_ascii=False)[:300]}")
@@ -134,6 +141,8 @@ async def _run_handler(handler, payload: dict, action: str):
             f"⚠️ *Scheduling Visitas* — error en `{action}`\n"
             f"❌ `{type(exc).__name__}: {str(exc)[:200]}`"
         )
+    finally:
+        _current_appt_id.reset(token)
 
 
 @app.post("/deploy")
@@ -333,8 +342,8 @@ def _render_monitor() -> str:
         client  = s["client"].replace("<", "&lt;")[:40]
         appt_id = s["appointment_id"]
 
-        # Logs relacionados con esta cita (orden cronológico)
-        related  = [e for e in reversed(all_history) if appt_id in e["message"]]
+        # Logs relacionados con esta cita (etiquetados por ContextVar, orden cronológico)
+        related  = [e for e in reversed(all_history) if e.get("appt_id") == appt_id]
         msgs_txt = " | ".join(e["message"] for e in related)
 
         # Breadcrumb de flujo
