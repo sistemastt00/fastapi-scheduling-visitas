@@ -117,11 +117,26 @@ async def run(payload: dict) -> dict:
         # searchContacts by PHONE (módulo 13)
         contacts_phone = await bitrix.search_contacts_by_phone(phone)
 
+        # ── BasicRouter 18 ────────────────────────────────────────────────
         if contacts_phone:
+            # [Cliente Existe (Phone)] — módulo 19: searchDeals by contact
             contact_id = contacts_phone[0]["ID"]
             logger.info(f"[visita_creada] Contacto por teléfono: ID={contact_id}")
+
+            deals_phone = await bitrix.search_deals_by_contact(contact_id)
+
+            # ── BasicRouter 20 ────────────────────────────────────────────
+            if len(deals_phone) > 0:
+                # [Existe Deal]
+                deal_id  = deals_phone[0]["ID"]
+                deal_url = f"https://tutrasterotuotroespacio.bitrix24.eu/crm/deal/details/{deal_id}"
+                logger.info(f"[visita_creada] Deal encontrado (phone): ID={deal_id}")
+            else:
+                # [No Existe Deal]
+                logger.info("[visita_creada] Sin deal para contacto por teléfono")
+
         else:
-            # createAContact
+            # [Cliente No Existe (Phone)] — módulo 25: createAContact
             resp = await bitrix.create_contact({
                 "NAME":      first,
                 "LAST_NAME": last,
