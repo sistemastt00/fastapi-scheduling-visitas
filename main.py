@@ -54,9 +54,9 @@ logger.addHandler(_mh)
 # ─── Dispatcher de acciones ───────────────────────────────────────────────────
 
 _ACTIONS = {
-    "appointment.scheduled":    visita_creada.run,
-    "appointment.rescheduled":  visita_modificada.run,
-    "appointment.canceled":     visita_cancelada.run,
+    "scheduled":    visita_creada.run,
+    "rescheduled":  visita_modificada.run,
+    "canceled":     visita_cancelada.run,
 }
 
 # ─── App ──────────────────────────────────────────────────────────────────────
