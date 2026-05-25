@@ -170,72 +170,58 @@ async def monitor():
 
 # ─── Monitor HTML ─────────────────────────────────────────────────────────────
 
-def _render_log_rows(entries) -> str:
-    """Renderiza filas de log para una lista de entradas."""
-    rows = ""
-    for entry in entries:
-        bg    = {"ERROR": "#2d0a0a", "WARNING": "#2d1f00"}.get(entry["level"], "#0d0d1a")
-        color = {"ERROR": "#e74c3c", "WARNING": "#f39c12", "INFO": "#3498db"}.get(entry["level"], "#aaa")
-        msg   = entry["message"].replace("<", "&lt;").replace(">", "&gt;")
-        rows += (
-            f'<tr style="background:{bg}">'
-            f'<td class="ts">{entry["time"]}</td>'
-            f'<td class="lv" style="color:{color}">{entry["level"]}</td>'
-            f'<td class="ms">{msg}</td>'
-            f'</tr>'
-        )
-    return rows or '<tr><td colspan="3" style="text-align:center;color:#333;padding:10px;font-size:.75em">Sin entradas de log para esta cita</td></tr>'
-
-
 def _render_monitor() -> str:
-    all_history = list(_history)  # snapshot ordenado más-reciente-primero
+    all_history = list(_history)  # snapshot, más reciente primero
 
-    # ── Log view completo (más reciente arriba) ───────────────────────────────
-    log_rows = _render_log_rows(all_history)
-    if not log_rows:
-        log_rows = '<tr><td colspan="3" style="text-align:center;color:#555;padding:30px">Sin eventos aún — esperando webhooks de Acuity…</td></tr>'
-
-    # ── Summary view ──────────────────────────────────────────────────────────
-    ACTION_COLOR = {
-        "creada":     "#2ecc71",
-        "modificada": "#f39c12",
-        "cancelada":  "#e74c3c",
-    }
-    ACTION_ICON = {
-        "creada":     "✅",
-        "modificada": "🔄",
-        "cancelada":  "❌",
-    }
+    # ── Summary rows ──────────────────────────────────────────────────────────
+    ACTION_COLOR = {"creada": "#2ecc71", "modificada": "#f39c12", "cancelada": "#e74c3c"}
+    ACTION_ICON  = {"creada": "✅",      "modificada": "🔄",       "cancelada": "❌"}
 
     bloques = ""
     for i, s in enumerate(list(state.summaries)):
         ac      = ACTION_COLOR.get(s["action"], "#aaa")
         icon    = ACTION_ICON.get(s["action"], "·")
-        subj    = s["client"].replace("<", "&lt;")[:40]
+        client  = s["client"].replace("<", "&lt;")[:40]
         appt_id = s["appointment_id"]
 
-        # Filtrar logs que mencionan este appointment_id (orden cronológico)
+        # Logs relacionados con esta cita (orden cronológico)
         related = [e for e in reversed(all_history) if appt_id in e["message"]]
-        inline_logs = _render_log_rows(related)
+        log_rows = ""
+        for entry in related:
+            lc  = {"ERROR": "#e74c3c", "WARNING": "#f39c12", "INFO": "#3498db"}.get(entry["level"], "#aaa")
+            msg = entry["message"].replace("<", "&lt;").replace(">", "&gt;")
+            log_rows += (
+                f'<tr>'
+                f'<td style="color:#888;white-space:nowrap;padding:3px 10px;font-size:.75em">{entry["time"]}</td>'
+                f'<td style="color:{lc};padding:3px 6px;font-size:.75em;font-weight:600">{entry["level"]}</td>'
+                f'<td style="padding:3px 10px;font-size:.78em;color:#ccc;word-break:break-word">{msg}</td>'
+                f'</tr>'
+            )
+        if not log_rows:
+            log_rows = '<tr><td colspan="3" style="color:#444;padding:8px 14px;font-size:.78em">Sin logs capturados para esta cita</td></tr>'
 
         bloques += f"""
-        <tr class="sm-head" onclick="toggle({i})" title="Clic para ver log de esta cita">
+        <tr class="sm-head" onclick="toggle({i})" title="Clic para ver log">
           <td class="ts">{s["time"]}</td>
           <td class="sm-arrow" id="arr-{i}">▶</td>
-          <td class="sm-from-h">{subj}<br><span class="sm-mail">{s["email"]}</span></td>
+          <td class="sm-from-h">{client}<br><span class="sm-mail">{s["email"]}</span></td>
           <td class="sm-appt">#{appt_id}</td>
           <td style="color:{ac};white-space:nowrap">{icon} {s["action"].capitalize()}</td>
           <td class="ms">{s["result"].replace("<","&lt;")}</td>
         </tr>
         <tr class="sm-detail" id="det-{i}" style="display:none">
-          <td colspan="6" style="padding:0;background:#080812;border-bottom:1px solid #1a1a35">
-            <div style="padding:6px 12px 4px;display:flex;gap:16px;font-size:.72em;color:#555;border-bottom:1px solid #111128">
-              <span>Bitrix24: <strong style="color:#9b59b6">{s["bitrix_id"] or "—"}</strong></span>
-              <span>Acuity: <strong style="color:#3498db">#{appt_id}</strong></span>
-              <span style="margin-left:auto;color:#333">{len(related)} entradas de log</span>
-            </div>
-            <table style="margin:0;border:none;border-radius:0;background:transparent">
-              <tbody>{inline_logs}</tbody>
+          <td colspan="6" style="padding:0;background:#0d0d1f">
+            <table style="width:100%;border-collapse:collapse;background:transparent;border:none;border-radius:0;margin:0">
+              <tr style="background:#111127">
+                <td style="padding:5px 14px;font-size:.75em;color:#555">Bitrix24:</td>
+                <td style="padding:5px 4px;font-size:.78em;color:#9b59b6"><strong>{s["bitrix_id"] or "—"}</strong></td>
+                <td style="padding:5px 14px;font-size:.75em;color:#555">Acuity:</td>
+                <td style="padding:5px 4px;font-size:.78em;color:#3498db"><strong>#{appt_id}</strong></td>
+                <td style="padding:5px 14px;font-size:.75em;color:#555">Email:</td>
+                <td style="padding:5px 4px;font-size:.78em;color:#aaa">{s["email"]}</td>
+                <td style="padding:5px 14px;font-size:.75em;color:#333;text-align:right">{len(related)} logs</td>
+              </tr>
+              {log_rows}
             </table>
           </td>
         </tr>"""
@@ -258,10 +244,9 @@ def _render_monitor() -> str:
   .btn {{ background:#16213e; border:1px solid #2a2a4a; color:#ccc; padding:5px 14px; border-radius:6px; cursor:pointer; font-family:monospace; font-size:12px; transition:background .15s; text-decoration:none; display:inline-block; }}
   .btn:hover {{ background:#1f2f50; color:#fff; }}
   .btn:disabled {{ opacity:.35; cursor:default; }}
-  .btn-pause   {{ border-color:#e74c3c; color:#e74c3c; }}
-  .btn-resume  {{ border-color:#2ecc71; color:#2ecc71; }}
-  .btn-summary {{ border-color:#9b59b6; color:#9b59b6; }}
-  .btn-summary.hidden {{ border-color:#333; color:#444; }}
+  .btn-pause  {{ border-color:#e74c3c; color:#e74c3c; }}
+  .btn-resume {{ border-color:#2ecc71; color:#2ecc71; }}
+  .btn-tab    {{ border-color:#9b59b6; color:#9b59b6; }}
   #ticker {{ color:#555; font-size:12px; min-width:50px; text-align:right; }}
   .sub {{ color:#555; font-size:12px; margin:0 0 16px; }}
   .sub code {{ background:#16213e; padding:1px 6px; border-radius:3px; margin:0 2px; color:#9b59b6; }}
@@ -273,19 +258,17 @@ def _render_monitor() -> str:
   td {{ padding:5px 10px; font-size:.82em; vertical-align:top; }}
   .sm-head {{ cursor:pointer; transition:background .1s; }}
   .sm-head:hover td {{ background:#1f2540; }}
-  .sm-arrow {{ width:20px; padding:5px 4px; color:#555; font-size:.7em; transition:color .15s; }}
-  .sm-head:hover .sm-arrow {{ color:#9b59b6; }}
+  .sm-arrow {{ width:20px; padding:5px 4px; color:#555; font-size:.7em; }}
   .sm-from-h {{ padding:5px 10px; font-size:.82em; min-width:140px; }}
   .sm-appt {{ padding:5px 10px; font-size:.78em; color:#3498db; white-space:nowrap; }}
   .sm-mail {{ color:#555; font-size:.75em; }}
-  .section-title {{ color:#9b59b6; font-size:.85em; font-weight:600; letter-spacing:.5px; margin:20px 0 6px; }}
 </style>
 </head>
 <body>
   <div class="topbar">
     <h1>🗓️ Scheduling Visitas <span class="badge">live</span></h1>
     <div class="toolbar">
-      <button class="btn btn-summary" id="btn-summary" onclick="toggleSummary()">&#9783; Summary</button>
+      <button class="btn btn-tab" id="tab-sum" onclick="collapseAll()">&#9783; Summary</button>
       <button class="btn btn-pause"  id="btn-pausar"  onclick="pauseRefresh()">⏸ Pausar</button>
       <button class="btn btn-resume" id="btn-retomar" onclick="resumeRefresh()" disabled>▶ Retomar</button>
       <span id="ticker">5 s</span>
@@ -293,41 +276,27 @@ def _render_monitor() -> str:
   </div>
   <p class="sub">Acuity → <code>appointment.scheduled</code> <code>appointment.rescheduled</code> <code>appointment.canceled</code> &nbsp;·&nbsp; refresco 5 s</p>
 
-  <div id="summary-section">
-    <p class="section-title">CITAS PROCESADAS</p>
-    <table>
-      <thead><tr><th>Fecha y hora</th><th></th><th>Cliente</th><th>Acuity ID</th><th>Acción</th><th>Resultado</th></tr></thead>
-      <tbody>{bloques}</tbody>
-    </table>
-  </div>
-
-  <p class="section-title">LOG DEL SISTEMA</p>
   <table>
-    <thead><tr><th>Hora</th><th>Nivel</th><th>Mensaje</th></tr></thead>
-    <tbody>{log_rows}</tbody>
+    <thead><tr><th>Fecha y hora</th><th></th><th>Cliente</th><th>Acuity ID</th><th>Acción</th><th>Resultado</th></tr></thead>
+    <tbody>{bloques}</tbody>
   </table>
 
   <script>
-    // ── Toggle fila desplegable ───────────────────────────────────────────────
+    function collapseAll() {{
+      document.querySelectorAll('.sm-detail').forEach(d => d.style.display = 'none');
+      document.querySelectorAll('.sm-arrow').forEach(a => a.textContent = '▶');
+    }}
     function toggle(i) {{
       const det = document.getElementById('det-' + i);
       const arr = document.getElementById('arr-' + i);
-      const open = det.style.display !== 'none';
-      det.style.display = open ? 'none' : 'table-row';
-      arr.textContent   = open ? '▶' : '▼';
+      if (det.style.display === 'none') {{
+        det.style.display = 'table-row';
+        arr.textContent = '▼';
+      }} else {{
+        det.style.display = 'none';
+        arr.textContent = '▶';
+      }}
     }}
-
-    // ── Botón Summary ─────────────────────────────────────────────────────────
-    let summaryVisible = true;
-    function toggleSummary() {{
-      summaryVisible = !summaryVisible;
-      document.getElementById('summary-section').style.display = summaryVisible ? '' : 'none';
-      const btn = document.getElementById('btn-summary');
-      btn.classList.toggle('hidden', !summaryVisible);
-      btn.textContent = summaryVisible ? '⊟ Summary' : '⊞ Summary';
-    }}
-
-    // ── Auto-refresco ─────────────────────────────────────────────────────────
     const INTERVAL = 5;
     let remaining = INTERVAL, countdown, reloader;
     function startTimers() {{
