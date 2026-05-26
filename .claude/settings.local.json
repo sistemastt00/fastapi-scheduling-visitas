@@ -23,7 +23,18 @@
       "Bash(which plink.exe 2>/dev/null || ls \"/mnt/c/Program Files/PuTTY/plink.exe\" 2>/dev/null && echo \"OK\" || echo \"NO\")",
       "Bash(\"/mnt/c/Program Files/PuTTY/plink.exe\" -pw \"TuRasero.com\" -batch paucosta@192.168.2.197 \"echo OK && whoami\")",
       "PowerShell(& \"C:\\\\Program Files\\\\PuTTY\\\\plink.exe\" -pw \"TuRasero.com\" -batch paucosta@192.168.2.197 \"echo OK && whoami\" 2>&1)",
-      "Bash(awk '/\\\\\"routes\\\\\": \\\\[/,/^\\\\s*\\\\},\\\\s*{.*\"flow\"/ {print NR\": \"$0}' \"C:\\\\Users\\\\Sistemas\\\\Documents\\\\FastAPI\\\\FastAPI - Scheduling Visitas\\\\blueprints\\\\01. Visita Creada.blueprint.json\")"
+      "Bash(awk '/\\\\\"routes\\\\\": \\\\[/,/^\\\\s*\\\\},\\\\s*{.*\"flow\"/ {print NR\": \"$0}' \"C:\\\\Users\\\\Sistemas\\\\Documents\\\\FastAPI\\\\FastAPI - Scheduling Visitas\\\\blueprints\\\\01. Visita Creada.blueprint.json\")",
+      "Bash(git commit -m 'refactor: diagrama de flujo visual con diamantes, flechas y ramas claras *)",
+      "Bash(git commit -m 'fix: añadir python-multipart para parsear form-encoded webhooks de Acuity *)",
+      "Bash(git commit -m 'fix: corregir action keys — Acuity envía '\\\\''scheduled'\\\\'' no '\\\\''appointment.scheduled'\\\\'' *)",
+      "Bash(git commit -m 'config: reducir sleep de visita_modificada de 240s a 60s *)",
+      "Bash(python -u -c ' *)",
+      "Bash(git commit -m 'refactor: actualizar diagrama — Router 18 \\(tel+deals\\) y sleep 60s en BP02 *)",
+      "Bash(git commit -m 'feat: monitor — desplegable con log por cita y boton Summary *)",
+      "Bash(git commit -m 'refactor: monitor — patron Email CGI \\(una tabla, collapseAll, detalle inline\\) *)",
+      "Bash(git commit -m 'feat: monitor — breadcrumb visual del flujo + resaltado de lineas clave *)",
+      "Bash(git commit -m 'fix: ContextVar para etiquetar todos los logs con appt_id durante el handler *)",
+      "Bash(curl -s https://scheduling-visitas.ngrok.dev/monitor)"
     ]
   }
 }

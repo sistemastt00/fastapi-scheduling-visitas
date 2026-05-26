@@ -153,7 +153,6 @@ async def run(payload: dict) -> dict:
         "contactId":                       contact_id,
         "sourceId":                        "WEB",
         "assignedById":                    gestor_id,
-        "ufCrmCreatedBy":                  gestor_id,
         "ufCrmCreatedById":                gestor_id,
         config.BX_FIELD_ACUITY_ID:         str(appointment_id),
         config.BX_FIELD_FECHA_HORA:        fecha_iso,

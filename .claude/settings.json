@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Sistemas/Documents/FastAPI/FastAPI - Llamada Agente bot Sofia/**)"
+    ]
+  }
+}

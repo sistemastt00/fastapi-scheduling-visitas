@@ -2007,6 +2007,7 @@
             },
             "routes": [
                 {
+                    "disabled": true,
                     "flow": [
                         {
                             "id": 17,
@@ -5551,6 +5552,7 @@
                     ]
                 },
                 {
+                    "disabled": true,
                     "flow": [
                         {
                             "id": 13,
@@ -7374,7 +7376,7 @@
                                                     [
                                                         {
                                                             "a": "ID",
-                                                            "b": "{{11.ID}}",
+                                                            "b": "{{13.ID}}",
                                                             "o": "="
                                                         }
                                                     ]
@@ -10366,14 +10368,14 @@
                                                             },
                                                             "mapper": {
                                                                 "url": "crm.item.add",
-                                                                "body": "{\r\n  \"entityTypeId\": 182,\r\n  \"fields\": {\n    \"assignedById\":{{10.`Gestor segun centro`}},\r\n    \"stageId\": \"DT182_55:NEW\",\n    \"sourceId\":\"WEB\",\n    \"ufCrm_1608117297\":\"{{10.`Centro a Revisar`}}\",\n    \"ufCrm31_1664208712198\":\"{{10.`Centro a Revisar`}}\",\n    \"ufCrm31_1716221104870\":\"31446\",\n    \"ufCrm31_1718778466198\":\"{{10.`Tipo Visita`}}\",\n    \"ufCrm_1593078333\":\"{{10.`Centro Formulario`}}\",\n    \"title\":\"Visita {{3.firstName}} {{3.lastName}} - {{3.type}} - {{3.date}} {{3.time}}\",\n    \"contactId\":\"{{11.ID}}\",\n    \"ufCrm_1590739351\":\"{{10.fecha_iso}}\",\n    \"ufCrm31_1664208348434\":\"{{3.forms[].values[].value}}\",\n    \"ufCrm31_1682517684974\":\"N\",\n    \"ufCrm31_1710250035957\":\"{{3.type}}\",\n    \"ufCrm31_1716073236196\":\"Nombre: {{3.firstName}} {{3.lastName}} - Telefonos: {{3.phone}} - E-mail: {{3.email}} - Tipo Visita: {{3.forms[].values[].name}} - Modulos a Enseñar: {{3.forms[].values[].value}} - Centro: {{3.type}}\",\n    \"ufCrm31_1716073465744\":\"{{3.forms[].values[].name}}\",\n    \"ufCrm31_1716073529423\":\"{{3.confirmationPage}}\",\n    \"ufCrm31_1716221624341\":\"{{3.confirmationPage}}\",\n    \"ufCrm31_1745787119410\":\"{{2.id}}\",\n    \"ufCrm31_1757428103201\":\"https://tutrasterotuotroespacio.bitrix24.eu/crm/deal/details/{{19.ID}}\",\n    \"ufCrmIsReturnCustomer\":\"N\",\n    \"ufCrmIsRepeatedApproach\":\"N\",\n    \"ufCrmClosed\":\"N\",\n    \"isManualOpportunity\":\"N\",\n    \"ufCrm_60523B222FBE8\":\"{{3.type}}\",\n    \"ufCrmCreatedBy\":\"{{19.CREATED_BY_ID}}\",\n    \"ufCrm_1590739593\":\"N\",\n    \"ufCrm_1590739569\":\"N\",\n    \"ufCrm31_1664208311266\":\"{{10.fecha_iso}}\"\n  }\r\n}",
                                                                 "method": "POST",
                                                                 "headers": [
                                                                     {
                                                                         "key": "Content-Type",
                                                                         "value": "application/json"
                                                                     }
-                                                                ]
+                                                                ],
+                                                                "body": "{\r\n  \"entityTypeId\": 182,\r\n  \"fields\": {\n    \"assignedById\":{{10.`Gestor segun centro`}},\r\n    \"stageId\": \"DT182_55:NEW\",\n    \"sourceId\":\"WEB\",\n    \"ufCrm_1608117297\":\"{{10.`Centro a Revisar`}}\",\n    \"ufCrm31_1664208712198\":\"{{10.`Centro a Revisar`}}\",\n    \"ufCrm31_1716221104870\":\"31446\",\n    \"ufCrm31_1718778466198\":\"{{10.`Tipo Visita`}}\",\n    \"ufCrm_1593078333\":\"{{10.`Centro Formulario`}}\",\n    \"title\":\"Visita {{3.firstName}} {{3.lastName}} - {{3.type}} - {{3.date}} {{3.time}}\",\n    \"contactId\":\"{{13.ID}}\",\n    \"ufCrm_1590739351\":\"{{10.fecha_iso}}\",\n    \"ufCrm31_1664208348434\":\"{{3.forms[].values[].value}}\",\n    \"ufCrm31_1682517684974\":\"N\",\n    \"ufCrm31_1710250035957\":\"{{3.type}}\",\n    \"ufCrm31_1716073236196\":\"Nombre: {{3.firstName}} {{3.lastName}} - Telefonos: {{3.phone}} - E-mail: {{3.email}} - Tipo Visita: {{3.forms[].values[].name}} - Modulos a Enseñar: {{3.forms[].values[].value}} - Centro: {{3.type}}\",\n    \"ufCrm31_1716073465744\":\"{{3.forms[].values[].name}}\",\n    \"ufCrm31_1716073529423\":\"{{3.confirmationPage}}\",\n    \"ufCrm31_1716221624341\":\"{{3.confirmationPage}}\",\n    \"ufCrm31_1745787119410\":\"{{2.id}}\",\n    \"ufCrm31_1757428103201\":\"https://tutrasterotuotroespacio.bitrix24.eu/crm/deal/details/{{19.ID}}\",\n    \"ufCrmIsReturnCustomer\":\"N\",\n    \"ufCrmIsRepeatedApproach\":\"N\",\n    \"ufCrmClosed\":\"N\",\n    \"isManualOpportunity\":\"N\",\n    \"ufCrm_60523B222FBE8\":\"{{3.type}}\",\n    \"ufCrmCreatedBy\":\"{{19.CREATED_BY_ID}}\",\n    \"ufCrm_1590739593\":\"N\",\n    \"ufCrm_1590739569\":\"N\",\n    \"ufCrm31_1664208311266\":\"{{10.fecha_iso}}\"\n  }\r\n}"
                                                             },
                                                             "metadata": {
                                                                 "designer": {
@@ -10382,10 +10384,16 @@
                                                                     "name": "Visita Creada"
                                                                 },
                                                                 "restore": {
+                                                                    "parameters": {
+                                                                        "__IMTCONN__": {
+                                                                            "label": "My Bitrix24 connection (sistemas@tutrastero.com)",
+                                                                            "data": {
+                                                                                "scoped": "true",
+                                                                                "connection": "bitrix24"
+                                                                            }
+                                                                        }
+                                                                    },
                                                                     "expect": {
-                                                                        "qs": {
-                                                                            "mode": "chose"
-                                                                        },
                                                                         "method": {
                                                                             "mode": "chose",
                                                                             "label": "POST"
@@ -10395,15 +10403,9 @@
                                                                             "items": [
                                                                                 null
                                                                             ]
-                                                                        }
-                                                                    },
-                                                                    "parameters": {
-                                                                        "__IMTCONN__": {
-                                                                            "data": {
-                                                                                "scoped": "true",
-                                                                                "connection": "bitrix24"
-                                                                            },
-                                                                            "label": "My Bitrix24 connection (sistemas@tutrastero.com)"
+                                                                        },
+                                                                        "qs": {
+                                                                            "mode": "chose"
                                                                         }
                                                                     }
                                                                 },
@@ -10439,6 +10441,8 @@
                                                                     },
                                                                     {
                                                                         "name": "headers",
+                                                                        "type": "array",
+                                                                        "label": "Headers",
                                                                         "spec": [
                                                                             {
                                                                                 "name": "key",
@@ -10450,12 +10454,12 @@
                                                                                 "type": "text",
                                                                                 "label": "Value"
                                                                             }
-                                                                        ],
-                                                                        "type": "array",
-                                                                        "label": "Headers"
+                                                                        ]
                                                                     },
                                                                     {
                                                                         "name": "qs",
+                                                                        "type": "array",
+                                                                        "label": "Query String",
                                                                         "spec": [
                                                                             {
                                                                                 "name": "key",
@@ -10467,9 +10471,7 @@
                                                                                 "type": "text",
                                                                                 "label": "Value"
                                                                             }
-                                                                        ],
-                                                                        "type": "array",
-                                                                        "label": "Query String"
+                                                                        ]
                                                                     },
                                                                     {
                                                                         "name": "body",
@@ -10638,14 +10640,14 @@
                                                             },
                                                             "mapper": {
                                                                 "url": "crm.item.add",
-                                                                "body": "{\r\n  \"entityTypeId\": 182,\r\n  \"fields\": {\n    \"assignedById\":{{10.`Gestor segun centro`}},\r\n    \"stageId\": \"DT182_55:NEW\",\n    \"sourceId\":\"WEB\",\n    \"ufCrm_1608117297\":\"{{10.`Centro a Revisar`}}\",\n    \"ufCrm31_1664208712198\":\"{{10.`Centro a Revisar`}}\",\n    \"ufCrm31_1716221104870\":\"31446\",\n    \"ufCrm31_1718778466198\":\"{{10.`Tipo Visita`}}\",\n    \"ufCrm_1593078333\":\"{{10.`Centro Formulario`}}\",\n    \"title\":\"Visita {{3.firstName}} {{3.lastName}} - {{3.type}} - {{3.date}} {{3.time}}\",\n    \"contactId\":\"{{11.ID}}\",\n    \"ufCrm_1590739351\":\"{{10.fecha_iso}}\",\n    \"ufCrm31_1664208348434\":\"{{3.forms[].values[].value}}\",\n    \"ufCrm31_1682517684974\":\"N\",\n    \"ufCrm31_1710250035957\":\"{{3.type}}\",\n    \"ufCrm31_1716073236196\":\"Nombre: {{3.firstName}} {{3.lastName}} - Telefonos: {{3.phone}} - E-mail: {{3.email}} - Tipo Visita: {{3.forms[].values[].name}} - Modulos a Enseñar: {{3.forms[].values[].value}} - Centro: {{3.type}}\",\n    \"ufCrm31_1716073465744\":\"{{3.forms[].values[].name}}\",\n    \"ufCrm31_1716073529423\":\"{{3.confirmationPage}}\",\n    \"ufCrm31_1716221624341\":\"{{3.confirmationPage}}\",\n    \"ufCrm31_1745787119410\":\"{{2.id}}\",\n    \"ufCrmCreatedById\":\"33872\",\n    \"ufCrmIsReturnCustomer\":\"N\",\n    \"ufCrmIsRepeatedApproach\":\"N\",\n    \"ufCrmClosed\":\"N\",\n    \"isManualOpportunity\":\"N\",\n    \"ufCrm_60523B222FBE8\":\"{{3.type}}\",\n    \"ufCrmCreatedBy\":\"6358\",\n    \"ufCrm_1590739593\":\"N\",\n    \"ufCrm_1590739569\":\"N\",\n    \"ufCrm31_1664208311266\":\"{{10.fecha_iso}}\"\n  }\r\n}",
                                                                 "method": "POST",
                                                                 "headers": [
                                                                     {
                                                                         "key": "Content-Type",
                                                                         "value": "application/json"
                                                                     }
-                                                                ]
+                                                                ],
+                                                                "body": "{\r\n  \"entityTypeId\": 182,\r\n  \"fields\": {\n    \"assignedById\":{{10.`Gestor segun centro`}},\r\n    \"stageId\": \"DT182_55:NEW\",\n    \"sourceId\":\"WEB\",\n    \"ufCrm_1608117297\":\"{{10.`Centro a Revisar`}}\",\n    \"ufCrm31_1664208712198\":\"{{10.`Centro a Revisar`}}\",\n    \"ufCrm31_1716221104870\":\"31446\",\n    \"ufCrm31_1718778466198\":\"{{10.`Tipo Visita`}}\",\n    \"ufCrm_1593078333\":\"{{10.`Centro Formulario`}}\",\n    \"title\":\"Visita {{3.firstName}} {{3.lastName}} - {{3.type}} - {{3.date}} {{3.time}}\",\n    \"contactId\":\"{{13.ID}}\",\n    \"ufCrm_1590739351\":\"{{10.fecha_iso}}\",\n    \"ufCrm31_1664208348434\":\"{{3.forms[].values[].value}}\",\n    \"ufCrm31_1682517684974\":\"N\",\n    \"ufCrm31_1710250035957\":\"{{3.type}}\",\n    \"ufCrm31_1716073236196\":\"Nombre: {{3.firstName}} {{3.lastName}} - Telefonos: {{3.phone}} - E-mail: {{3.email}} - Tipo Visita: {{3.forms[].values[].name}} - Modulos a Enseñar: {{3.forms[].values[].value}} - Centro: {{3.type}}\",\n    \"ufCrm31_1716073465744\":\"{{3.forms[].values[].name}}\",\n    \"ufCrm31_1716073529423\":\"{{3.confirmationPage}}\",\n    \"ufCrm31_1716221624341\":\"{{3.confirmationPage}}\",\n    \"ufCrm31_1745787119410\":\"{{2.id}}\",\n    \"ufCrmCreatedById\":\"33872\",\n    \"ufCrmIsReturnCustomer\":\"N\",\n    \"ufCrmIsRepeatedApproach\":\"N\",\n    \"ufCrmClosed\":\"N\",\n    \"isManualOpportunity\":\"N\",\n    \"ufCrm_60523B222FBE8\":\"{{3.type}}\",\n    \"ufCrmCreatedBy\":\"6358\",\n    \"ufCrm_1590739593\":\"N\",\n    \"ufCrm_1590739569\":\"N\",\n    \"ufCrm31_1664208311266\":\"{{10.fecha_iso}}\"\n  }\r\n}"
                                                             },
                                                             "metadata": {
                                                                 "designer": {
@@ -10654,10 +10656,16 @@
                                                                     "name": "Visita Creada"
                                                                 },
                                                                 "restore": {
+                                                                    "parameters": {
+                                                                        "__IMTCONN__": {
+                                                                            "label": "My Bitrix24 connection (sistemas@tutrastero.com)",
+                                                                            "data": {
+                                                                                "scoped": "true",
+                                                                                "connection": "bitrix24"
+                                                                            }
+                                                                        }
+                                                                    },
                                                                     "expect": {
-                                                                        "qs": {
-                                                                            "mode": "chose"
-                                                                        },
                                                                         "method": {
                                                                             "mode": "chose",
                                                                             "label": "POST"
@@ -10667,15 +10675,9 @@
                                                                             "items": [
                                                                                 null
                                                                             ]
-                                                                        }
-                                                                    },
-                                                                    "parameters": {
-                                                                        "__IMTCONN__": {
-                                                                            "data": {
-                                                                                "scoped": "true",
-                                                                                "connection": "bitrix24"
-                                                                            },
-                                                                            "label": "My Bitrix24 connection (sistemas@tutrastero.com)"
+                                                                        },
+                                                                        "qs": {
+                                                                            "mode": "chose"
                                                                         }
                                                                     }
                                                                 },
@@ -10711,6 +10713,8 @@
                                                                     },
                                                                     {
                                                                         "name": "headers",
+                                                                        "type": "array",
+                                                                        "label": "Headers",
                                                                         "spec": [
                                                                             {
                                                                                 "name": "key",
@@ -10722,12 +10726,12 @@
                                                                                 "type": "text",
                                                                                 "label": "Value"
                                                                             }
-                                                                        ],
-                                                                        "type": "array",
-                                                                        "label": "Headers"
+                                                                        ]
                                                                     },
                                                                     {
                                                                         "name": "qs",
+                                                                        "type": "array",
+                                                                        "label": "Query String",
                                                                         "spec": [
                                                                             {
                                                                                 "name": "key",
@@ -10739,9 +10743,7 @@
                                                                                 "type": "text",
                                                                                 "label": "Value"
                                                                             }
-                                                                        ],
-                                                                        "type": "array",
-                                                                        "label": "Query String"
+                                                                        ]
                                                                     },
                                                                     {
                                                                         "name": "body",
@@ -14824,14 +14826,14 @@
                                             },
                                             "mapper": {
                                                 "url": "crm.item.add",
-                                                "body": "{\r\n  \"entityTypeId\": 182,\r\n  \"fields\": {\n    \"assignedById\":{{10.`Gestor segun centro`}},\r\n    \"stageId\": \"DT182_55:NEW\",\n    \"sourceId\":\"WEB\",\n    \"ufCrm_1608117297\":\"{{10.`Centro a Revisar`}}\",\n    \"ufCrm31_1664208712198\":\"{{10.`Centro a Revisar`}}\",\n    \"ufCrm31_1716221104870\":\"31446\",\n    \"ufCrm31_1718778466198\":\"{{10.`Tipo Visita`}}\",\n    \"ufCrm_1593078333\":\"{{10.`Centro Formulario`}}\",\n    \"title\":\"Visita  {{3.firstName}} {{3.lastName}} - {{3.type}} - {{3.date}} {{3.time}}\",\n    \"contactId\":\"{{11.ID}}\",\n    \"ufCrm_1590739351\":\"{{10.fecha_iso}}\",\n    \"ufCrm31_1664208348434\":\"{{3.forms[].values[].value}}\",\n    \"ufCrm31_1682517684974\":\"N\",\n    \"ufCrm31_1710250035957\":\"{{3.type}}\",\n    \"ufCrm31_1716073236196\":\"Nombre:  {{3.firstName}} {{3.lastName}} - Telefonos: {{3.phone}} - E-mail: {{3.email}} - Tipo Visita: {{3.forms[].values[].name}} - Modulos a Enseñar: {{3.forms[].values[].value}} - Centro: {{3.type}}\",\n    \"ufCrm31_1716073465744\":\"{{3.forms[].values[].name}}\",\n    \"ufCrm31_1716073529423\":\"{{3.confirmationPage}}\",\n    \"ufCrm31_1716221624341\":\"{{3.confirmationPage}}\",\n    \"ufCrm31_1745787119410\":\"{{2.id}}\",\n     \"ufCrmCreatedById\":\"20\",\n    \"ufCrmIsReturnCustomer\":\"N\",\n    \"ufCrmIsRepeatedApproach\":\"N\",\n    \"ufCrmClosed\":\"N\",\n    \"isManualOpportunity\":\"N\",\n    \"ufCrm_60523B222FBE8\":\"{{3.type}}\",\n    \"ufCrmCreatedBy\":\"6358\",\n    \"ufCrm_1590739593\":\"N\",\n    \"ufCrm_1590739569\":\"N\",\n    \"ufCrm31_1664208311266\":\"{{10.fecha_iso}}\"\n  }\r\n}",
                                                 "method": "POST",
                                                 "headers": [
                                                     {
                                                         "key": "Content-Type",
                                                         "value": "application/json"
                                                     }
-                                                ]
+                                                ],
+                                                "body": "{\r\n  \"entityTypeId\": 182,\r\n  \"fields\": {\n    \"assignedById\":{{10.`Gestor segun centro`}},\r\n    \"stageId\": \"DT182_55:NEW\",\n    \"sourceId\":\"WEB\",\n    \"ufCrm_1608117297\":\"{{10.`Centro a Revisar`}}\",\n    \"ufCrm31_1664208712198\":\"{{10.`Centro a Revisar`}}\",\n    \"ufCrm31_1716221104870\":\"31446\",\n    \"ufCrm31_1718778466198\":\"{{10.`Tipo Visita`}}\",\n    \"ufCrm_1593078333\":\"{{10.`Centro Formulario`}}\",\n    \"title\":\"Visita  {{3.firstName}} {{3.lastName}} - {{3.type}} - {{3.date}} {{3.time}}\",\n    \"contactId\":\"{{25.id}}\",\n    \"ufCrm_1590739351\":\"{{10.fecha_iso}}\",\n    \"ufCrm31_1664208348434\":\"{{3.forms[].values[].value}}\",\n    \"ufCrm31_1682517684974\":\"N\",\n    \"ufCrm31_1710250035957\":\"{{3.type}}\",\n    \"ufCrm31_1716073236196\":\"Nombre:  {{3.firstName}} {{3.lastName}} - Telefonos: {{3.phone}} - E-mail: {{3.email}} - Tipo Visita: {{3.forms[].values[].name}} - Modulos a Enseñar: {{3.forms[].values[].value}} - Centro: {{3.type}}\",\n    \"ufCrm31_1716073465744\":\"{{3.forms[].values[].name}}\",\n    \"ufCrm31_1716073529423\":\"{{3.confirmationPage}}\",\n    \"ufCrm31_1716221624341\":\"{{3.confirmationPage}}\",\n    \"ufCrm31_1745787119410\":\"{{2.id}}\",\n     \"ufCrmCreatedById\":\"20\",\n    \"ufCrmIsReturnCustomer\":\"N\",\n    \"ufCrmIsRepeatedApproach\":\"N\",\n    \"ufCrmClosed\":\"N\",\n    \"isManualOpportunity\":\"N\",\n    \"ufCrm_60523B222FBE8\":\"{{3.type}}\",\n    \"ufCrmCreatedBy\":\"6358\",\n    \"ufCrm_1590739593\":\"N\",\n    \"ufCrm_1590739569\":\"N\",\n    \"ufCrm31_1664208311266\":\"{{10.fecha_iso}}\"\n  }\r\n}"
                                             },
                                             "metadata": {
                                                 "designer": {
@@ -14840,10 +14842,16 @@
                                                     "name": "Visita Creada"
                                                 },
                                                 "restore": {
+                                                    "parameters": {
+                                                        "__IMTCONN__": {
+                                                            "label": "My Bitrix24 connection (sistemas@tutrastero.com)",
+                                                            "data": {
+                                                                "scoped": "true",
+                                                                "connection": "bitrix24"
+                                                            }
+                                                        }
+                                                    },
                                                     "expect": {
-                                                        "qs": {
-                                                            "mode": "chose"
-                                                        },
                                                         "method": {
                                                             "mode": "chose",
                                                             "label": "POST"
@@ -14853,15 +14861,9 @@
                                                             "items": [
                                                                 null
                                                             ]
-                                                        }
-                                                    },
-                                                    "parameters": {
-                                                        "__IMTCONN__": {
-                                                            "data": {
-                                                                "scoped": "true",
-                                                                "connection": "bitrix24"
-                                                            },
-                                                            "label": "My Bitrix24 connection (sistemas@tutrastero.com)"
+                                                        },
+                                                        "qs": {
+                                                            "mode": "chose"
                                                         }
                                                     }
                                                 },
@@ -14897,6 +14899,8 @@
                                                     },
                                                     {
                                                         "name": "headers",
+                                                        "type": "array",
+                                                        "label": "Headers",
                                                         "spec": [
                                                             {
                                                                 "name": "key",
@@ -14908,12 +14912,12 @@
                                                                 "type": "text",
                                                                 "label": "Value"
                                                             }
-                                                        ],
-                                                        "type": "array",
-                                                        "label": "Headers"
+                                                        ]
                                                     },
                                                     {
                                                         "name": "qs",
+                                                        "type": "array",
+                                                        "label": "Query String",
                                                         "spec": [
                                                             {
                                                                 "name": "key",
@@ -14925,9 +14929,7 @@
                                                                 "type": "text",
                                                                 "label": "Value"
                                                             }
-                                                        ],
-                                                        "type": "array",
-                                                        "label": "Query String"
+                                                        ]
                                                     },
                                                     {
                                                         "name": "body",
