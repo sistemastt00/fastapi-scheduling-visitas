@@ -88,8 +88,9 @@ async def run(payload: dict) -> dict:
     # ── searchContacts by EMAIL (módulo 11) ───────────────────────────────────
     contacts_email = await bitrix.search_contacts_by_email(email)
 
-    deal_id  = None
-    deal_url = ""
+    deal_id        = None
+    deal_url       = ""
+    assigned_by_id = gestor_id
 
     # ── BasicRouter ───────────────────────────────────────────────────────────
     if contacts_email:
@@ -103,11 +104,13 @@ async def run(payload: dict) -> dict:
         # ── BasicRouter anidado ───────────────────────────────────────────
         if len(deals) > 0:
             # [Existe Deal] deals.count > 0
-            deal_id  = deals[0]["ID"]
-            deal_url = f"https://tutrasterotuotroespacio.bitrix24.eu/crm/deal/details/{deal_id}"
+            deal_id        = deals[0]["ID"]
+            deal_url       = f"https://tutrasterotuotroespacio.bitrix24.eu/crm/deal/details/{deal_id}"
+            assigned_by_id = deals[0].get("ASSIGNED_BY_ID", gestor_id)
             logger.info(f"[visita_creada] Deal encontrado: ID={deal_id}")
         else:
             # [No Deal] deals.count == 0
+            assigned_by_id = gestor_id
             logger.info("[visita_creada] Sin deal para este contacto")
 
     else:
@@ -128,11 +131,13 @@ async def run(payload: dict) -> dict:
             # ── BasicRouter 20 ────────────────────────────────────────────
             if len(deals_phone) > 0:
                 # [Existe Deal]
-                deal_id  = deals_phone[0]["ID"]
-                deal_url = f"https://tutrasterotuotroespacio.bitrix24.eu/crm/deal/details/{deal_id}"
+                deal_id        = deals_phone[0]["ID"]
+                deal_url       = f"https://tutrasterotuotroespacio.bitrix24.eu/crm/deal/details/{deal_id}"
+                assigned_by_id = deals_phone[0].get("ASSIGNED_BY_ID", gestor_id)
                 logger.info(f"[visita_creada] Deal encontrado (phone): ID={deal_id}")
             else:
                 # [No Existe Deal]
+                assigned_by_id = gestor_id
                 logger.info("[visita_creada] Sin deal para contacto por teléfono")
 
         else:
@@ -153,7 +158,7 @@ async def run(payload: dict) -> dict:
         "contactId":                       contact_id,
         "sourceId":                        "WEB",
         "assignedById":                    gestor_id,
-        "ufCrmCreatedBy":                  gestor_id,
+        "ufCrmCreatedBy":                  assigned_by_id,
         config.BX_FIELD_ACUITY_ID:         str(appointment_id),
         config.BX_FIELD_FECHA_HORA:        fecha_iso,
         config.BX_FIELD_FECHA_HORA_ALT:    fecha_iso,

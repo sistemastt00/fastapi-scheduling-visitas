@@ -55,7 +55,7 @@ async def search_deals_by_contact(contact_id: str | int) -> list[dict]:
         "limit":  1,
         "order":  {"DATE_CREATE": "DESC"},
         "filter": {"CONTACT_ID": str(contact_id)},
-        "select": ["ID", "TITLE", "CONTACT_ID"],
+        "select": ["ID", "TITLE", "CONTACT_ID", "ASSIGNED_BY_ID"],
     })
     return data.get("result", [])
 
