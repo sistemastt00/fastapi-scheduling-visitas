@@ -8,7 +8,6 @@ Arquitectura:
   · Monitor  GET  /monitor: panel de logs en tiempo real
 """
 import asyncio
-import collections
 import contextvars
 import datetime
 import json
@@ -17,6 +16,8 @@ import os
 import signal
 import subprocess
 from contextlib import asynccontextmanager
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 from fastapi import FastAPI, Request, HTTPException, BackgroundTasks
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -29,14 +30,16 @@ from handlers import visita_creada, visita_modificada, visita_cancelada
 
 # ─── Logging ──────────────────────────────────────────────────────────────────
 
+_LOG_FILE = Path(__file__).parent / "logs.txt"
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(message)s",
+    handlers=[
+        RotatingFileHandler(_LOG_FILE, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8"),
+        logging.StreamHandler(),
+    ],
 )
 logger = logging.getLogger("scheduling-visitas")
-
-MAX_HISTORY = 100
-_history: collections.deque = collections.deque(maxlen=MAX_HISTORY)
 
 # ContextVar: appointment_id activo durante la ejecución de un handler
 _current_appt_id: contextvars.ContextVar[str] = contextvars.ContextVar("appt_id", default="")
@@ -44,12 +47,13 @@ _current_appt_id: contextvars.ContextVar[str] = contextvars.ContextVar("appt_id"
 
 class _MonitorHandler(logging.Handler):
     def emit(self, record):
-        _history.append({
+        state.history.append({
             "time":    datetime.datetime.fromtimestamp(record.created).strftime("%d/%m %H:%M:%S"),
             "level":   record.levelname,
             "message": self.format(record),
-            "appt_id": _current_appt_id.get(""),   # ← etiqueta automática
+            "appt_id": _current_appt_id.get(""),
         })
+        state.save()
 
 
 _mh = _MonitorHandler()
@@ -68,6 +72,7 @@ _ACTIONS = {
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    state.load()
     await telegram_svc.send_alert("✅ *Scheduling Visitas* — servicio iniciado")
     logger.info("🗓️  Scheduling Visitas iniciado — esperando webhooks de Acuity")
     yield
@@ -135,14 +140,26 @@ async def _run_handler(handler, payload: dict, action: str):
     try:
         result = await handler(payload)
         logger.info(f"[{action}] OK → {json.dumps(result, ensure_ascii=False)[:300]}")
+        state.stats[action] = state.stats.get(action, 0) + 1
     except Exception as exc:
         logger.error(f"[{action}] Error: {exc}", exc_info=True)
+        state.stats["errors"] = state.stats.get("errors", 0) + 1
         await telegram_svc.send_alert(
             f"⚠️ *Scheduling Visitas* — error en `{action}`\n"
             f"❌ `{type(exc).__name__}: {str(exc)[:200]}`"
         )
     finally:
         _current_appt_id.reset(token)
+
+
+@app.get("/api/stats")
+def api_stats():
+    """Estadísticas de visitas para el Monitor Global."""
+    return {
+        "counters": dict(state.stats),
+        "total":    state.stats.get("scheduled", 0) + state.stats.get("rescheduled", 0) + state.stats.get("canceled", 0),
+        "history":  len(state.history),
+    }
 
 
 @app.post("/deploy")
@@ -329,7 +346,7 @@ def _key_color(msg: str) -> str | None:
 
 
 def _render_monitor() -> str:
-    all_history = list(_history)  # snapshot, más reciente primero
+    all_history = list(state.history)
 
     # ── Summary rows ──────────────────────────────────────────────────────────
     ACTION_COLOR = {"creada": "#2ecc71", "modificada": "#f39c12", "cancelada": "#e74c3c"}

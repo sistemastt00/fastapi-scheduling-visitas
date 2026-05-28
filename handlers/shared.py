@@ -94,3 +94,4 @@ def record_summary(appt_id, client: str, email: str, action: str,
         "result":         result,
         "bitrix_id":      bitrix_id,
     })
+    state.save()
