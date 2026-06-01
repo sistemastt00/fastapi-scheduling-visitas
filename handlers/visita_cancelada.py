@@ -16,6 +16,7 @@ import config
 from handlers.shared import record_summary
 from services import acuity as acuity_svc
 from services import bitrix
+from services import airtable as airtable_svc
 
 logger = logging.getLogger("scheduling-visitas")
 
@@ -65,6 +66,14 @@ async def run(payload: dict) -> dict:
         {"stageId": config.BITRIX_STAGE_FAIL},
     )
     logger.info(f"[visita_cancelada] Visita marcada FAIL: ID={item_id}")
+
+    await airtable_svc.upsert_visita(
+        acuity_id     = str(appointment_id),
+        cliente       = f"{first} {last}",
+        email         = email,
+        bitrix_182_id = str(item_id or ""),
+        accion        = "cancelada",
+    )
 
     record_summary(appointment_id, f"{first} {last}", email, "cancelada",
                    f"Visita → FAIL | ID: {item_id}", str(item_id))

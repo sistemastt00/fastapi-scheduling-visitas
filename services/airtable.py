@@ -12,7 +12,7 @@ import config
 logger = logging.getLogger("scheduling-visitas")
 
 
-async def upsert_visita(acuity_id: str, cliente: str, email: str, bitrix_182_id: str) -> str | None:
+async def upsert_visita(acuity_id: str, cliente: str, email: str, bitrix_182_id: str, accion: str = "") -> str | None:
     """
     Crea o actualiza un registro en Airtable con los datos de la visita.
     Devuelve el record_id o None si falla.
@@ -33,6 +33,7 @@ async def upsert_visita(acuity_id: str, cliente: str, email: str, bitrix_182_id:
         "cliente":       cliente,
         "email":         email,
         "bitrix_182_id": bitrix_182_id,
+        "accion":        accion,
     }
     campos = {k: v for k, v in campos.items() if v is not None and v != ""}
 

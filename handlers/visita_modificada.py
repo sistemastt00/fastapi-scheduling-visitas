@@ -24,6 +24,7 @@ from handlers.shared import (
 )
 from services import acuity as acuity_svc
 from services import bitrix
+from services import airtable as airtable_svc
 
 logger = logging.getLogger("scheduling-visitas")
 
@@ -95,6 +96,14 @@ async def run(payload: dict) -> dict:
         },
     )
     logger.info(f"[visita_modificada] Visita actualizada: ID={item_id} | {visita_ant.strip()} → {visita_nueva.strip()}")
+
+    await airtable_svc.upsert_visita(
+        acuity_id     = str(appointment_id),
+        cliente       = f"{first} {last}",
+        email         = email,
+        bitrix_182_id = str(item_id or ""),
+        accion        = "modificada",
+    )
 
     record_summary(appointment_id, f"{first} {last}", email, "modificada",
                    f"Actualizada ID: {item_id} | {visita_ant.strip()} → {visita_nueva.strip()}",

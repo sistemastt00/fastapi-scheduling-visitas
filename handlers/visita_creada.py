@@ -205,6 +205,7 @@ async def run(payload: dict) -> dict:
         cliente       = f"{first} {last}",
         email         = email,
         bitrix_182_id = str(item_id or ""),
+        accion        = "creada",
     )
 
     record_summary(appointment_id, f"{first} {last}", email, "creada",
