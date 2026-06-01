@@ -135,3 +135,8 @@ DEPLOY_DIR   = os.getenv("DEPLOY_DIR", "/opt/fastapi-scheduling-visitas")
 # ─── Telegram — alertas de error ─────────────────────────────────────────────
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID   = os.getenv("TELEGRAM_CHAT_ID", "")
+
+# ─── Airtable ─────────────────────────────────────────────────────────────────
+AIRTABLE_TOKEN    = os.getenv("AIRTABLE_TOKEN", "")
+AIRTABLE_BASE_ID  = os.getenv("AIRTABLE_BASE_ID", "app6JRyW2TWAV4exL")
+AIRTABLE_TABLE_ID = os.getenv("AIRTABLE_TABLE_ID", "tblypJtHDV9Jzmom2")
