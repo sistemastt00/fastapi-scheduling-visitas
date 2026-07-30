@@ -606,11 +606,13 @@ def _render_monitor() -> str:
     .sm-appt{{padding:5px 10px;font-size:.78em;color:#3498db;white-space:nowrap}}
     .sm-mail{{color:var(--t3);font-size:.75em}}
   </style>
+<script>(function(){{var t=localStorage.getItem('monTheme')||'light';document.documentElement.setAttribute('data-theme',t);}})();</script>
 </head>
 <body>
 <div class="nav">
   <span class="nav-title">🗓️ Scheduling Visitas <span class="live">live</span></span>
   <div class="nav-actions">
+    <button class="nb" id="btn-theme" onclick="toggleTheme()" title="Cambiar tema">☀️</button>
     <button class="nb" id="tab-sum" onclick="collapseAll()">⊟ Summary</button>
     <button class="nb nb-danger" id="btn-pausar" onclick="pauseRefresh()">⏸ Pausar</button>
     <button class="nb" id="btn-retomar" onclick="resumeRefresh()" disabled>▶ Retomar</button>
@@ -667,10 +669,14 @@ def _render_monitor() -> str:
         const doc = new DOMParser().parseFromString(html, 'text/html');
         const newBodyHTML = Array.from(doc.body.children).filter(function(el) {{ return el.tagName !== 'SCRIPT'; }}).map(function(el) {{ return el.outerHTML; }}).join('');
         document.body.innerHTML = newBodyHTML;
+        (function(){{var t=localStorage.getItem('monTheme')||'light';document.documentElement.setAttribute('data-theme',t);var b=document.getElementById('btn-theme');if(b)b.textContent=t==='dark'?'🌙':'☀️';}})();
         Object.keys(openIds).forEach(function(id) {{ var el = document.getElementById(id); if (el) el.style.display = openIds[id]; }});
       }} catch(e) {{ console.error('Soft reload error:', e); }}
     }}
     startTimers();
+    function setTheme(val){{localStorage.setItem('monTheme',val);document.documentElement.setAttribute('data-theme',val);var b=document.getElementById('btn-theme');if(b)b.textContent=val==='dark'?'🌙':'☀️';}}
+    function toggleTheme(){{var t=document.documentElement.getAttribute('data-theme')||'light';setTheme(t==='dark'?'light':'dark');}}
+    (function(){{var t=localStorage.getItem('monTheme')||'light';var b=document.getElementById('btn-theme');if(b)b.textContent=t==='dark'?'🌙':'☀️';}})();
   </script>
 </body>
 </html>"""
