@@ -607,6 +607,8 @@ def _render_monitor() -> str:
     .sm-mail{{color:var(--t3);font-size:.75em}}
   </style>
 <script>(function(){{var t=localStorage.getItem('monTheme')||'light';document.documentElement.setAttribute('data-theme',t);}})();</script>
+<style>.in-iframe .nav{{display:none!important}}</style>
+<script>if(window.self!==window.top)document.documentElement.classList.add('in-iframe');</script>
 </head>
 <body>
 <div class="nav">
