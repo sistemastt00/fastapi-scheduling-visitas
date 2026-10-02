@@ -7,7 +7,7 @@ Arquitectura:
   · Deploy   POST /deploy: git pull + reinicio del servicio
   · Monitor  GET  /monitor: panel de logs en tiempo real
 """
-import asyncio
+import asyncio, socket
 import contextvars
 import datetime
 import json
@@ -145,14 +145,48 @@ _ACTIONS = {
     "canceled":     visita_cancelada.run,
 }
 
+_IP_FILE = Path("/opt/ip-monitor/last_ip.txt")
+
+def _get_local_ip() -> str:
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return ""
+
+async def _ip_monitor_loop() -> None:
+    await asyncio.sleep(10)
+    while True:
+        try:
+            current_ip = await asyncio.get_event_loop().run_in_executor(None, _get_local_ip)
+            if current_ip:
+                last_ip = _IP_FILE.read_text().strip() if _IP_FILE.exists() else ""
+                if last_ip and current_ip != last_ip:
+                    logger.warning(f"IP cambió: {last_ip} → {current_ip}")
+                    await telegram_svc.send_alert(
+                        f"⚠️ *IP del servidor cambió*\n"
+                        f"Anterior: `{last_ip}`\n"
+                        f"Nueva: `{current_ip}`\n"
+                        f"Servidor: fastapi-scheduling-visitas"
+                    )
+                _IP_FILE.write_text(current_ip)
+        except Exception as exc:
+            logger.error(f"_ip_monitor_loop error: {exc}")
+        await asyncio.sleep(60)
+
 # ─── App ──────────────────────────────────────────────────────────────────────
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     state.load()
+    task = asyncio.create_task(_ip_monitor_loop())
     await telegram_svc.send_alert("✅ *Scheduling Visitas* — servicio iniciado")
     logger.info("🗓️  Scheduling Visitas iniciado — esperando webhooks de Acuity")
     yield
+    task.cancel()
     await telegram_svc.send_alert("🔴 *Scheduling Visitas* — servicio detenido")
 
 
