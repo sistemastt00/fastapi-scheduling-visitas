@@ -12,17 +12,17 @@ import config
 
 def compute_fecha_iso(dt_str: str) -> str:
     """
-    Replica: formatDate(addHours(datetime; -1); "YYYY-MM-DDTHH:mm:ssZ"; "Europe/Madrid")
-    → Resta 1 hora al datetime de Acuity y devuelve ISO 8601 con offset.
-    El -1h es el ajuste que Make.com aplica internamente por su manejo de timezones.
+    Normaliza el datetime de Acuity (con su offset real, p.ej. +02:00 verano / +01:00
+    invierno) a ISO 8601. Antes restaba 1 hora fija (ajuste heredado del blueprint de
+    Make.com) lo cual solo era correcto en horario de verano y provocaba un desfase
+    de 1 hora en invierno tras el cambio de horario.
     """
     if not dt_str:
         return ""
     try:
         normalized = re.sub(r"([+-])(\d{2})(\d{2})$", r"\1\2:\3", dt_str)
         parsed = dt_mod.datetime.fromisoformat(normalized)
-        result = parsed - dt_mod.timedelta(hours=1)
-        return result.isoformat()
+        return parsed.isoformat()
     except Exception:
         return dt_str
 
