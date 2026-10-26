@@ -4,6 +4,7 @@ config.py — Carga variables de entorno y define constantes globales.
 Los switch() son copia literal de los SetVariables del blueprint.
 """
 import os
+import datetime as dt_mod
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -15,6 +16,11 @@ ACUITY_WEBHOOK_SECRET = os.getenv("ACUITY_WEBHOOK_SECRET", "")
 
 # ─── Bitrix24 ─────────────────────────────────────────────────────────────────
 BITRIX_URL = os.getenv("BITRIX_URL", "")
+
+# Huso horario fijo de la cuenta de Bitrix24 (Moscú, sin DST). La API de Bitrix
+# siempre interpreta/muestra los campos de fecha en este offset, independientemente
+# de la zona horaria real de Madrid (que sí cambia con el horario de verano/invierno).
+BITRIX_ACCOUNT_UTC_OFFSET = dt_mod.timezone(dt_mod.timedelta(hours=3))
 
 # Entidad SPA Visitas
 BITRIX_ENTITY_VISITAS = 182

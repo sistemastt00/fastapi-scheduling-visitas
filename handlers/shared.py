@@ -12,17 +12,24 @@ import config
 
 def compute_fecha_iso(dt_str: str) -> str:
     """
-    Normaliza el datetime de Acuity (con su offset real, p.ej. +02:00 verano / +01:00
-    invierno) a ISO 8601. Antes restaba 1 hora fija (ajuste heredado del blueprint de
-    Make.com) lo cual solo era correcto en horario de verano y provocaba un desfase
-    de 1 hora en invierno tras el cambio de horario.
+    Bitrix24 siempre devuelve/interpreta las fechas en el huso fijo de la cuenta
+    (config.BITRIX_ACCOUNT_UTC_OFFSET, +03:00, sin DST). Para que el campo de
+    fecha/hora de la visita muestre la misma hora local que eligió el cliente en
+    Acuity (sea cual sea el offset real que mande Acuity, +02:00 verano o +01:00
+    invierno en Madrid), se conservan los dígitos de fecha/hora tal cual y solo se
+    sustituye la etiqueta de offset por la de la cuenta de Bitrix.
+
+    El -1h fijo que había antes no era un ajuste de DST: era un atajo que solo
+    compensaba correctamente la diferencia (+03:00 vs +02:00 verano = 1h) y se
+    rompía en invierno (+03:00 vs +01:00 invierno = 2h de diferencia real).
     """
     if not dt_str:
         return ""
     try:
         normalized = re.sub(r"([+-])(\d{2})(\d{2})$", r"\1\2:\3", dt_str)
         parsed = dt_mod.datetime.fromisoformat(normalized)
-        return parsed.isoformat()
+        result = parsed.replace(tzinfo=config.BITRIX_ACCOUNT_UTC_OFFSET)
+        return result.isoformat()
     except Exception:
         return dt_str
 
